@@ -1050,7 +1050,9 @@ app.use('/uploads', express.static(uploadsDir)); // Serve uploaded files
 
 // GET database state
 app.get('/api/db', (req, res) => {
-    res.json(getDB());
+    const db = getDB();
+    console.log('GET /api/db returning gallery count:', db.gallery.length);
+    res.json(db);
 });
 
 // Update CMS configs
@@ -1086,8 +1088,10 @@ app.post('/api/gallery', upload.single('mediaFile'), (req, res) => {
     let fileType = req.body.type || 'image';
 
     if (req.file) {
+        console.log('POST /api/gallery received file:', req.file.originalname);
         fileUrl = '/uploads/' + req.file.filename;
         fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
+        console.log('Saved file path:', fileUrl);
     }
 
     if (!fileUrl) {
@@ -1100,9 +1104,11 @@ app.post('/api/gallery', upload.single('mediaFile'), (req, res) => {
         type: fileType,
         caption: req.body.caption || 'Event Celebration'
     };
+    console.log('Added gallery item id:', newPost.id);
 
     db.gallery.unshift(newPost);
     saveDB(db);
+    console.log('database.json written successfully');
     res.json({ success: true, post: newPost });
 });
 

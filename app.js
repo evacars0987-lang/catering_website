@@ -84,8 +84,11 @@ async function fetchDatabaseState() {
         cmsConfig = db.cms;
     } catch (err) {
         console.warn("REST Server offline, loading local mock database:", err);
-        // Only load mock data if galleryDB hasn't been loaded yet
-        if (!galleryDB || galleryDB.length === 0) {
+        // Only load mock data if not already loaded from server
+        const hadGallery = galleryDB && galleryDB.length > 0;
+        loadMockOfflineDatabase();
+        // Restore galleryDB from localStorage if we had it before (don't overwrite new uploads)
+        if (hadGallery) {
             const savedGallery = localStorage.getItem('galleryDB');
             if (savedGallery) {
                 try {
@@ -93,7 +96,6 @@ async function fetchDatabaseState() {
                 } catch (e) {}
             }
         }
-        loadMockOfflineDatabase();
     }
 }
 
@@ -104,7 +106,7 @@ function loadMockOfflineDatabase() {
         { id: 'bf_pj', name: 'Pineapple Juice', category: 'Drink', price: 0, active: true, cal: 85, protein: 1, carbs: 20, fat: 0, allergens: [], desc: 'Tangy and sweet fresh pineapple juice.' },
         { id: 'd4', name: 'Traditional Lassi', category: 'Drink', price: 0, active: true, cal: 210, protein: 5, carbs: 22, fat: 8, allergens: ['Dairy'], desc: 'Thick hand-churned yogurt flavored with cardamom and saffron threads.' },
         { id: 'd5', name: 'Butter Milk', category: 'Drink', price: 0, active: true, cal: 60, protein: 2, carbs: 5, fat: 2, allergens: ['Dairy'], desc: 'Traditional spiced buttermilk with roasted cumin and mint.' },
-        { id: 'bf_tea', name: 'Royal Masala Tea', category: 'Drink', price: 0, active: true, cal: 90, protein: 2, carbs: 12, fat: 3, allergens: ['Dairy'], desc: 'Brewed with fresh milk, ginger, cardamom, and heritage spices.' },
+        { id: 'bf_tea', name: 'Royal Masala Tea', category: 'Drink', price: 0, active: true, cal: 90, protein: 2, carbs: 12, fat: 3, allergens: ['Dairy'], desc: 'Brewed with fresh milk, ginger, cardramom, and heritage spices.' },
         { id: 'bf_coffee', name: 'Premium Filter Coffee', category: 'Drink', price: 0, active: true, cal: 110, protein: 3, carbs: 15, fat: 3, allergens: ['Dairy'], desc: 'Aromatic south Indian decoction blended with steamed hot milk.' },
         { id: 'sb_mocktail', name: 'Assorted Mocktails', category: 'Drink', price: 0, active: true, cal: 120, protein: 0, carbs: 30, fat: 0, allergens: [], desc: 'Bespoke mocktail curations including Mint Mojito and Blue Lagoon.' },
         { id: 'sb_jaljeera', name: 'Shahi Jaljeera', category: 'Drink', price: 0, active: true, cal: 40, protein: 0, carbs: 8, fat: 0, allergens: [], desc: 'Refreshing cumin-coriander spiced water with fresh mint and boondi.' },
@@ -2493,11 +2495,11 @@ window.uploadCMSGalleryPost = async function() {
             const res = await fetch('/api/gallery', { method: 'POST', body: fd });
             const data = await res.json();
             if (data.success) {
-                galleryDB.unshift(data.post);
+                // Refresh from database to ensure consistency
+                await fetchDatabaseState();
                 renderGalleryPosts();
                 fileInput.value = '';
                 capInput.value = '';
-                localStorage.setItem('galleryDB', JSON.stringify(galleryDB));
                 alert("Gallery post uploaded and published live!");
             } else {
                 alert(`Upload failed: ${data.error || 'Unknown error'}`);
