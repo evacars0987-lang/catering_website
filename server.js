@@ -1,12 +1,16 @@
 const express = require('express');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Ensure uploads directory exists
+// Cloudinary config - uses CLOUDINARY_URL env var if set
+cloudinary.config({ secure: true });
+
+// Ensure uploads directory exists (ephemeral fallback for local dev)
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
@@ -1074,14 +1078,34 @@ app.get('/api/gallery', (req, res) => {
 });
 
 // Post Media to Gallery (via file upload or link)
-app.post('/api/gallery', upload.single('mediaFile'), (req, res) => {
+app.post('/api/gallery', upload.single('mediaFile'), async (req, res) => {
     const db = getDB();
     let fileUrl = req.body.url;
     let fileType = req.body.type || 'image';
 
     if (req.file) {
-        fileUrl = 'uploads/' + req.file.filename;
-        fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
+        // Check if Cloudinary is configured
+        const hasCloudinary = process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+        
+        if (hasCloudinary) {
+            try {
+                const result = await cloudinary.uploader.upload(req.file.path, {
+                    resource_type: req.file.mimetype.startsWith('video/') ? 'video' : 'image',
+                    folder: 'catering-gallery'
+                });
+                fileUrl = result.secure_url;
+                fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
+                // Clean up temp file
+                fs.unlinkSync(req.file.path);
+            } catch (e) {
+                console.error('Cloudinary upload error:', e);
+                return res.status(500).json({ error: 'Cloudinary upload failed' });
+            }
+        } else {
+            // Local fallback (ephemeral on Render)
+            fileUrl = '/uploads/' + req.file.filename;
+            fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
+        }
     }
 
     if (!fileUrl) {
@@ -1097,14 +1121,31 @@ app.post('/api/gallery', upload.single('mediaFile'), (req, res) => {
 
     db.gallery.unshift(newPost);
     saveDB(db);
-    res.json({ success: true, post: newPost});
+    res.json({ success: true, post: newPost });
 });
 
 // Upload video path for hero
-app.post('/api/cms/video', upload.single('videoFile'), (req, res) => {
+app.post('/api/cms/video', upload.single('videoFile'), async (req, res) => {
     const db = getDB();
     if (req.file) {
-        db.cms.hero_video = 'uploads/' + req.file.filename;
+        const hasCloudinary = process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+        
+        if (hasCloudinary) {
+            try {
+                const result = await cloudinary.uploader.upload(req.file.path, {
+                    resource_type: 'video',
+                    folder: 'catering-hero'
+                });
+                db.cms.hero_video = result.secure_url;
+                fs.unlinkSync(req.file.path);
+            } catch (e) {
+                console.error('Cloudinary upload error:', e);
+                fs.unlinkSync(req.file.path);
+                return res.status(500).json({ error: 'Cloudinary upload failed' });
+            }
+        } else {
+            db.cms.hero_video = '/uploads/' + req.file.filename;
+        }
         saveDB(db);
         return res.json({ success: true, videoUrl: db.cms.hero_video });
     }
