@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +11,12 @@ const PORT = process.env.PORT || 3000;
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Ensure backups directory exists
+const backupsDir = path.join(__dirname, 'backups');
+if (!fs.existsSync(backupsDir)) {
+    fs.mkdirSync(backupsDir, { recursive: true });
 }
 
 // Database JSON path
@@ -1005,24 +1012,205 @@ const defaultDB = {
     }
 };
 
-// Load or initialize database
-function getDB() {
-    if (!fs.existsSync(dbPath)) {
-        fs.writeFileSync(dbPath, JSON.stringify(defaultDB, null, 4));
-        return defaultDB;
+// Backup and Checksum Helpers
+function getChecksum(dataString) {
+    return crypto.createHash('sha256').update(dataString).digest('hex');
+}
+
+function verifyChecksum(dbString) {
+    if (!fs.existsSync(dbPath + '.sha256')) return true;
+    const expected = fs.readFileSync(dbPath + '.sha256', 'utf8').trim();
+    const actual = getChecksum(dbString);
+    return expected === actual;
+}
+
+function getLatestBackup() {
+    if (!fs.existsSync(backupsDir)) return null;
+    const files = fs.readdirSync(backupsDir).filter(f => f.startsWith('database-') && f.endsWith('.json'));
+    if (files.length === 0) return null;
+    files.sort();
+    return path.join(backupsDir, files[files.length - 1]);
+}
+
+function restoreLatestBackup() {
+    const latest = getLatestBackup();
+    if (latest) {
+        console.error(`Restoring from latest backup: ${latest}`);
+        const content = fs.readFileSync(latest, 'utf8');
+        fs.writeFileSync(dbPath, content);
+        fs.writeFileSync(dbPath + '.sha256', getChecksum(content));
+        return JSON.parse(content);
     }
-    try {
-        const raw = fs.readFileSync(dbPath, 'utf8');
-        return JSON.parse(raw);
-    } catch (e) {
-        console.error('Error reading database file, returning default:', e);
-        return defaultDB;
+    return null;
+}
+
+// Safe Database Read
+function safeReadDB() {
+    const tryRead = (filePath) => {
+        try {
+            if (fs.existsSync(filePath)) {
+                const raw = fs.readFileSync(filePath, 'utf8');
+                return { raw, parsed: JSON.parse(raw) };
+            }
+        } catch (e) {}
+        return null;
+    };
+
+    let main = tryRead(dbPath);
+    if (main && verifyChecksum(main.raw)) {
+        return main.parsed;
+    } else if (main) {
+        console.error('WARNING: Checksum validation failed or file corrupted. Restoring latest backup.');
+        fs.renameSync(dbPath, dbPath + '.corrupt-' + Date.now());
+    }
+
+    const restored = restoreLatestBackup();
+    if (restored) return restored;
+
+    return JSON.parse(JSON.stringify(defaultDB));
+}
+
+// Keep getDB for backwards compatibility with read-only routes
+function getDB() {
+    return safeReadDB();
+}
+
+function safeUpdateDB(sectionName, updater) {
+    const currentDB = safeReadDB();
+    const originalDB = JSON.parse(JSON.stringify(currentDB));
+    
+    const startMs = Date.now();
+    updater(currentDB);
+    const duration = Date.now() - startMs;
+    
+    // Dangerous Write Guards
+    const originalInvCount = (originalDB.inventory || []).length;
+    const newInvCount = (currentDB.inventory || []).length;
+    const originalGalleryCount = (originalDB.gallery || []).length;
+    const newGalleryCount = (currentDB.gallery || []).length;
+    
+    if (newInvCount < 50) {
+        throw new Error(`ABORT: Unsafe save. Inventory count < 50 (${newInvCount}).`);
+    }
+    if (newInvCount < originalInvCount * 0.9) {
+        throw new Error(`ABORT: Unsafe save. Inventory count dropped from ${originalInvCount} to ${newInvCount}.`);
+    }
+    if (sectionName !== 'gallery_delete' && newGalleryCount < originalGalleryCount) {
+        throw new Error(`ABORT: Unsafe save. Gallery count dropped from ${originalGalleryCount} to ${newGalleryCount} during ${sectionName}.`);
+    }
+
+    const currentDBStr = JSON.stringify(currentDB, null, 4);
+    const checksum = getChecksum(currentDBStr);
+
+    // Save versioned backup
+    const dateStr = new Date().toISOString().replace(/T/, '-').replace(/:/g, '-').split('.')[0];
+    const backupFileName = `database-${dateStr}.json`;
+    const newBackupPath = path.join(backupsDir, backupFileName);
+    fs.writeFileSync(newBackupPath, currentDBStr);
+
+    // Enforce 20 backups limit
+    const backupFiles = fs.readdirSync(backupsDir).filter(f => f.startsWith('database-') && f.endsWith('.json')).sort();
+    if (backupFiles.length > 20) {
+        const toDelete = backupFiles.slice(0, backupFiles.length - 20);
+        toDelete.forEach(f => fs.unlinkSync(path.join(backupsDir, f)));
+    }
+
+    // Atomic write
+    const tempPath = dbPath + '.tmp';
+    fs.writeFileSync(tempPath, currentDBStr);
+    fs.renameSync(tempPath, dbPath);
+    fs.writeFileSync(dbPath + '.sha256', checksum);
+    
+    // Log
+    const logEntry = `[${new Date().toISOString()}] | Endpoint: ${sectionName} | Inv: ${originalInvCount}->${newInvCount} | Gal: ${originalGalleryCount}->${newGalleryCount} | Backup: ${backupFileName} | Checksum: ${checksum} | Duration: ${duration}ms\n`;
+    fs.appendFileSync(path.join(__dirname, 'database.log'), logEntry);
+    
+    return currentDB;
+}
+
+// Startup Validation
+function validateStartup() {
+    const db = safeReadDB();
+    const invCount = (db.inventory || []).length;
+    const catCount = new Set((db.inventory || []).map(i => i.cuisine || i.category)).size;
+    
+    if (invCount < 50 || catCount < 3) {
+        console.error(`Startup Validation Failed! Inv: ${invCount}, Categories: ${catCount}. Restoring from backup...`);
+        const restored = restoreLatestBackup();
+        if (!restored) {
+            console.error("No valid backup found to restore during startup failure!");
+        } else {
+            console.log("Restored successfully from latest backup.");
+        }
+    } else {
+        console.log("Startup validation passed.");
+    }
+}
+validateStartup();
+
+// Media Integrity Verification
+const manifestPath = path.join(__dirname, 'uploads-manifest.json');
+
+function verifyMediaIntegrity() {
+    console.log("Starting media integrity scan...");
+    
+    let actualFiles = [];
+    if (fs.existsSync(uploadsDir)) {
+        actualFiles = fs.readdirSync(uploadsDir);
+    }
+    
+    const manifest = {
+        lastScan: new Date().toISOString(),
+        totalFiles: actualFiles.length,
+        files: actualFiles
+    };
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 4));
+
+    const db = safeReadDB();
+    let brokenCount = 0;
+    let missingFound = false;
+    let missingFilenames = [];
+    
+    db.gallery.forEach(item => {
+        if (item.url && item.url.startsWith('/uploads/')) {
+            const filename = item.url.replace('/uploads/', '');
+            const exists = actualFiles.includes(filename);
+            
+            if (!exists && !item.isBroken) {
+                missingFound = true;
+                missingFilenames.push(filename);
+                console.error(`Missing file detected: ${filename} for item ${item.id}`);
+            } else if (exists && item.isBroken) {
+                missingFound = true;
+            }
+            if (!exists) brokenCount++;
+        }
+    });
+    
+    if (missingFound) {
+        try {
+            safeUpdateDB('media_integrity_scan', draft => {
+                draft.gallery.forEach(draftItem => {
+                    if (draftItem.url && draftItem.url.startsWith('/uploads/')) {
+                        const filename = draftItem.url.replace('/uploads/', '');
+                        draftItem.isBroken = !actualFiles.includes(filename);
+                    }
+                });
+            });
+            console.log(`Media integrity scan fixed DB flags. Found ${missingFilenames.length} new broken files.`);
+            if (missingFilenames.length > 0) {
+                const logEntry = `[${new Date().toISOString()}] | Endpoint: SYSTEM_SCAN | Broken Media Found: ${missingFilenames.length} | Missing Files: ${missingFilenames.join(', ')}\n`;
+                fs.appendFileSync(path.join(__dirname, 'database.log'), logEntry);
+            }
+        } catch (e) {
+            console.error("Failed to update database during media integrity scan:", e);
+        }
     }
 }
 
-function saveDB(data) {
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 4));
-}
+// Initial scan and setup interval (30 min)
+verifyMediaIntegrity();
+setInterval(verifyMediaIntegrity, 30 * 60 * 1000);
 
 // Multer Storage config with 100MB limit
 const storage = multer.diskStorage({
@@ -1057,10 +1245,16 @@ app.get('/api/db', (req, res) => {
 
 // Update CMS configs
 app.post('/api/cms', (req, res) => {
-    const db = getDB();
-    db.cms = { ...db.cms, ...req.body };
-    saveDB(db);
-    res.json({ success: true, cms: db.cms });
+    try {
+        let updatedCms;
+        safeUpdateDB('cms', db => {
+            db.cms = { ...db.cms, ...req.body };
+            updatedCms = db.cms;
+        });
+        res.json({ success: true, cms: updatedCms });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Get Gallery
@@ -1068,34 +1262,47 @@ app.get('/api/gallery', (req, res) => {
     res.json(getDB().gallery);
 });
 
-// Delete Gallery item
+// Delete Gallery item (first instance)
 app.delete('/api/gallery/:id', (req, res) => {
-    const db = getDB();
-    const { id } = req.params;
-    const idx = db.gallery.findIndex(item => item.id === id);
-    if (idx !== -1) {
-        db.gallery.splice(idx, 1);
-        saveDB(db);
-        return res.json({ success: true });
+    try {
+        let found = false;
+        safeUpdateDB('gallery_delete', db => {
+            const idx = db.gallery.findIndex(item => item.id === req.params.id);
+            if (idx !== -1) {
+                db.gallery.splice(idx, 1);
+                found = true;
+            }
+        });
+        if (found) return res.json({ success: true });
+        res.status(404).json({ error: 'Gallery item not found' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
-    res.status(404).json({ error: 'Gallery item not found' });
 });
 
 // Post Media to Gallery (via file upload or link)
 app.post('/api/gallery', upload.single('mediaFile'), (req, res) => {
-    const db = getDB();
     let fileUrl = req.body.url;
     let fileType = req.body.type || 'image';
 
     if (req.file) {
-        console.log('POST /api/gallery received file:', req.file.originalname);
+        console.log('POST /api/gallery received file:', req.file.originalname, 'mimetype:', req.file.mimetype);
         fileUrl = '/uploads/' + req.file.filename;
-        fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
-        console.log('Saved file path:', fileUrl);
+        const isVideoMimetype = req.file.mimetype.startsWith('video/');
+        const isVideoExt = /\.(mp4|webm|ogg|mov)$/i.test(req.file.originalname);
+        fileType = isVideoMimetype || isVideoExt ? 'video' : 'image';
+        console.log('Saved file path:', fileUrl, 'type:', fileType);
     }
 
     if (!fileUrl) {
         return res.status(400).json({ error: 'No media file or URL provided.' });
+    }
+
+    if (req.file) {
+        const filePath = path.join(uploadsDir, req.file.filename);
+        if (!fs.existsSync(filePath)) {
+            return res.status(500).json({ error: 'Uploaded file missing from disk immediately after upload!' });
+        }
     }
 
     const newPost = {
@@ -1106,19 +1313,30 @@ app.post('/api/gallery', upload.single('mediaFile'), (req, res) => {
     };
     console.log('Added gallery item id:', newPost.id);
 
-    db.gallery.unshift(newPost);
-    saveDB(db);
-    console.log('database.json written successfully');
-    res.json({ success: true, post: newPost });
+    try {
+        safeUpdateDB('gallery_upload', db => {
+            if (!db.gallery) db.gallery = [];
+            db.gallery.unshift(newPost);
+        });
+        console.log('database.json written successfully');
+        res.json({ success: true, post: newPost });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Upload video path for hero
 app.post('/api/cms/video', upload.single('videoFile'), (req, res) => {
-    const db = getDB();
     if (req.file) {
-        db.cms.hero_video = '/uploads/' + req.file.filename;
-        saveDB(db);
-        return res.json({ success: true, videoUrl: db.cms.hero_video });
+        try {
+            let videoUrl = '/uploads/' + req.file.filename;
+            safeUpdateDB('cms_video', db => {
+                db.cms.hero_video = videoUrl;
+            });
+            return res.json({ success: true, videoUrl });
+        } catch (e) {
+            return res.status(500).json({ error: e.message });
+        }
     }
     res.status(400).json({ error: 'No video file provided' });
 });
@@ -1130,37 +1348,52 @@ app.get('/api/reviews', (req, res) => {
 
 // Post Review
 app.post('/api/reviews', (req, res) => {
-    const db = getDB();
     const newReview = {
         id: 'r' + Date.now(),
         author: req.body.author || 'Anonymous Guest',
         text: req.body.text || '',
-        approved: false // Needs admin approval in ERP
+        approved: false
     };
-    db.reviews.push(newReview);
-    saveDB(db);
-    res.json({ success: true, review: newReview });
+    try {
+        safeUpdateDB('review_post', db => {
+            if (!db.reviews) db.reviews = [];
+            db.reviews.push(newReview);
+        });
+        res.json({ success: true, review: newReview });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Approve/Reject Review
 app.post('/api/reviews/approve', (req, res) => {
-    const db = getDB();
     const { id, approved } = req.body;
-    const review = db.reviews.find(r => r.id === id);
-    if (review) {
-        review.approved = approved;
-        saveDB(db);
-        return res.json({ success: true });
+    try {
+        let found = false;
+        safeUpdateDB('review_approve', db => {
+            const review = db.reviews.find(r => r.id === id);
+            if (review) {
+                review.approved = approved;
+                found = true;
+            }
+        });
+        if (found) return res.json({ success: true });
+        res.status(404).json({ error: 'Review not found' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
-    res.status(404).json({ error: 'Review not found' });
 });
 
 // Delete Review
 app.delete('/api/reviews/:id', (req, res) => {
-    const db = getDB();
-    db.reviews = db.reviews.filter(r => r.id !== req.params.id);
-    saveDB(db);
-    res.json({ success: true });
+    try {
+        safeUpdateDB('review_delete', db => {
+            db.reviews = db.reviews.filter(r => r.id !== req.params.id);
+        });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Get Inventory
@@ -1170,19 +1403,25 @@ app.get('/api/inventory', (req, res) => {
 
 // Add/Modify Inventory Item
 app.post('/api/inventory', (req, res) => {
-    const db = getDB();
     const item = req.body;
-    const existingIdx = db.inventory.findIndex(i => i.id === item.id);
-    
-    if (existingIdx > -1) {
-        db.inventory[existingIdx] = { ...db.inventory[existingIdx], ...item };
-    } else {
-        item.id = item.id || 'd' + Date.now();
-        db.inventory.push(item);
+    try {
+        let updatedInventory;
+        safeUpdateDB('inventory_update', db => {
+            if (!db.inventory) db.inventory = [];
+            const existingIdx = db.inventory.findIndex(i => i.id === item.id);
+            
+            if (existingIdx > -1) {
+                db.inventory[existingIdx] = { ...db.inventory[existingIdx], ...item };
+            } else {
+                item.id = item.id || 'd' + Date.now();
+                db.inventory.push(item);
+            }
+            updatedInventory = db.inventory;
+        });
+        res.json({ success: true, inventory: updatedInventory });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
-    
-    saveDB(db);
-    res.json({ success: true, inventory: db.inventory });
 });
 
 // Get Leads (CRM)
@@ -1192,27 +1431,35 @@ app.get('/api/leads', (req, res) => {
 
 // Update/Save Lead
 app.post('/api/leads', (req, res) => {
-    const db = getDB();
     const lead = req.body;
-    const existingIdx = db.leads.findIndex(l => l.id === lead.id);
-
-    if (existingIdx > -1) {
-        db.leads[existingIdx] = { ...db.leads[existingIdx], ...lead };
-    } else {
-        lead.id = lead.id || 'L' + (1000 + db.leads.length + 1);
-        db.leads.push(lead);
+    try {
+        safeUpdateDB('lead_update', db => {
+            if (!db.leads) db.leads = [];
+            const existingIdx = db.leads.findIndex(l => l.id === lead.id);
+        
+            if (existingIdx > -1) {
+                db.leads[existingIdx] = { ...db.leads[existingIdx], ...lead };
+            } else {
+                lead.id = lead.id || 'L' + (1000 + db.leads.length + 1);
+                db.leads.push(lead);
+            }
+        });
+        res.json({ success: true, lead });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
-
-    saveDB(db);
-    res.json({ success: true, lead });
 });
 
 // Delete Lead
 app.delete('/api/leads/:id', (req, res) => {
-    const db = getDB();
-    db.leads = db.leads.filter(l => l.id !== req.params.id);
-    saveDB(db);
-    res.json({ success: true });
+    try {
+        safeUpdateDB('lead_delete', db => {
+            db.leads = db.leads.filter(l => l.id !== req.params.id);
+        });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Get Calendar Rules
@@ -1222,18 +1469,110 @@ app.get('/api/calendar', (req, res) => {
 
 // Update Calendar Rules
 app.post('/api/calendar', (req, res) => {
-    const db = getDB();
     const { date, condition, rate, remove } = req.body;
-
-    if (remove) {
-        db.calendarRules = db.calendarRules.filter(r => r.date !== date);
-    } else {
-        db.calendarRules = db.calendarRules.filter(r => r.date !== date);
-        db.calendarRules.push({ date, condition, rate });
+    try {
+        let rules;
+        safeUpdateDB('calendar_update', db => {
+            if (!db.calendarRules) db.calendarRules = [];
+            if (remove) {
+                db.calendarRules = db.calendarRules.filter(r => r.date !== date);
+            } else {
+                db.calendarRules = db.calendarRules.filter(r => r.date !== date);
+                db.calendarRules.push({ date, condition, rate });
+            }
+            rules = db.calendarRules;
+        });
+        res.json({ success: true, rules });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
+});
 
-    saveDB(db);
-    res.json({ success: true, rules: db.calendarRules });
+// Admin Backups Endpoints
+app.get('/api/admin/backups', (req, res) => {
+    try {
+        const files = fs.readdirSync(backupsDir)
+            .filter(f => f.startsWith('database-') && f.endsWith('.json'))
+            .sort().reverse();
+        res.json({ success: true, backups: files });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/admin/restore/:filename', (req, res) => {
+    try {
+        const { filename } = req.params;
+        // strictly alphanumeric + dashes + json
+        if (!filename.match(/^database-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.json$/)) {
+            return res.status(400).json({ error: 'Invalid backup filename format' });
+        }
+        const targetPath = path.join(backupsDir, filename);
+        if (!fs.existsSync(targetPath)) {
+            return res.status(404).json({ error: 'Backup not found' });
+        }
+        
+        // Final backup before restore
+        const currentDB = safeReadDB();
+        const dateStr = new Date().toISOString().replace(/T/, '-').replace(/:/g, '-').split('.')[0];
+        const preRestoreBackup = `database-prerestore-${dateStr}.json`;
+        fs.writeFileSync(path.join(backupsDir, preRestoreBackup), JSON.stringify(currentDB, null, 4));
+
+        const content = fs.readFileSync(targetPath, 'utf8');
+        fs.writeFileSync(dbPath, content);
+        fs.writeFileSync(dbPath + '.sha256', getChecksum(content));
+
+        const logEntry = `[${new Date().toISOString()}] | Endpoint: ADMIN_RESTORE | Restored from: ${filename} | Pre-Restore Backup: ${preRestoreBackup}\n`;
+        fs.appendFileSync(path.join(__dirname, 'database.log'), logEntry);
+
+        res.json({ success: true, message: `Restored ${filename} successfully` });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get('/api/admin/system-health', (req, res) => {
+    try {
+        const db = safeReadDB();
+        const dbStr = JSON.stringify(db, null, 4);
+        const checksumValid = verifyChecksum(dbStr);
+        
+        let backups = [];
+        if (fs.existsSync(backupsDir)) {
+            backups = fs.readdirSync(backupsDir).filter(f => f.startsWith('database-') && f.endsWith('.json'));
+        }
+        const lastBackup = backups.length > 0 ? backups.sort().reverse()[0] : 'None';
+        
+        let uploads = 0;
+        if (fs.existsSync(uploadsDir)) {
+            uploads = fs.readdirSync(uploadsDir).length;
+        }
+        
+        let brokenMedia = 0;
+        (db.gallery || []).forEach(item => {
+            if (item.isBroken) brokenMedia++;
+        });
+        
+        let lastIntegrityCheck = 'Never';
+        if (fs.existsSync(manifestPath)) {
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+            lastIntegrityCheck = manifest.lastScan;
+        }
+
+        res.json({
+            database: "healthy",
+            checksum: checksumValid ? "valid" : "invalid",
+            backups: backups.length,
+            uploads: uploads,
+            brokenMedia: brokenMedia,
+            inventory: (db.inventory || []).length,
+            gallery: (db.gallery || []).length,
+            lastBackup: lastBackup,
+            lastIntegrityCheck: lastIntegrityCheck
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Start Server

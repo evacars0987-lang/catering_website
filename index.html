@@ -847,6 +847,31 @@
                             <button class="primary-btn gold-accent-btn" onclick="uploadGalleryItem()"><i class="fa-solid fa-upload"></i> Upload to Gallery</button>
                             
                             <hr style="margin:30px 0; border-color:var(--border-color);">
+                            
+                            <!-- Gallery Statistics -->
+                            <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 30px; text-align: center;">
+                                <div style="background:var(--bg-lighter); padding:15px; border-radius:5px; border:1px solid var(--border-color);">
+                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Total Media</div>
+                                    <strong id="stat-gallery-total" style="font-size:1.5rem; color:var(--primary);">0</strong>
+                                </div>
+                                <div style="background:var(--bg-lighter); padding:15px; border-radius:5px; border:1px solid var(--border-color);">
+                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Images</div>
+                                    <strong id="stat-gallery-images" style="font-size:1.5rem; color:var(--primary);">0</strong>
+                                </div>
+                                <div style="background:var(--bg-lighter); padding:15px; border-radius:5px; border:1px solid var(--border-color);">
+                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Videos</div>
+                                    <strong id="stat-gallery-videos" style="font-size:1.5rem; color:var(--primary);">0</strong>
+                                </div>
+                                <div style="background:var(--bg-lighter); padding:15px; border-radius:5px; border:1px solid #ff4d4d;">
+                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Broken Media</div>
+                                    <strong id="stat-gallery-broken" style="font-size:1.5rem; color:#ff4d4d;">0</strong>
+                                </div>
+                                <div style="background:var(--bg-lighter); padding:15px; border-radius:5px; border:1px solid #ff4d4d;">
+                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Missing Files</div>
+                                    <strong id="stat-gallery-missing" style="font-size:1.5rem; color:#ff4d4d;">0</strong>
+                                </div>
+                            </div>
+                            
                             <h4>Current Gallery Items</h4>
                             <div id="admin-gallery-list" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:20px;">
                                 <!-- Populated dynamically -->

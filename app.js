@@ -74,28 +74,15 @@ async function fetchDatabaseState() {
     try {
         const res = await fetch('/api/db');
         const db = await res.json();
-        console.log("REST Server response database:", db);
         inventoryDB = db.inventory.map(item => ({ ...item, price: 0 }));
         crmLeads = db.leads.map(lead => ({ ...lead, value: 0 }));
         reviewsDB = db.reviews;
         galleryDB = db.gallery;
-        console.log("fetchDatabaseState: populated galleryDB size =", galleryDB ? galleryDB.length : null);
         calendarRules = db.calendarRules.map(rule => ({ ...rule, rate: '+ 0%' }));
         cmsConfig = db.cms;
     } catch (err) {
         console.warn("REST Server offline, loading local mock database:", err);
-        // Only load mock data if not already loaded from server
-        const hadGallery = galleryDB && galleryDB.length > 0;
         loadMockOfflineDatabase();
-        // Restore galleryDB from localStorage if we had it before (don't overwrite new uploads)
-        if (hadGallery) {
-            const savedGallery = localStorage.getItem('galleryDB');
-            if (savedGallery) {
-                try {
-                    galleryDB = JSON.parse(savedGallery);
-                } catch (e) {}
-            }
-        }
     }
 }
 
@@ -243,20 +230,22 @@ function loadMockOfflineDatabase() {
         { id: 'r2', author: 'Rajesh Mittal', text: 'Highly professional team. The visual menu catalog and transparent booking coordination were outstanding!', approved: true },
         { id: 'r3', author: 'Sneha Verma', text: 'Their mocktail counter and Shahi Raj Kachori were massive hits among the guests. 10/10.', approved: true }
     ];
-    galleryDB = [
-        { id: 'g01', url: 'uploads/WhatsApp Video 2026-06-03 at 20.12.56.mp4', type: 'video', caption: 'Heritage Catering Entrance Setup' },
-        { id: 'g02', url: 'uploads/WhatsApp Video 2026-06-03 at 20.12.56 (1).mp4', type: 'video', caption: 'Premium Buffet Service & Live Counters' },
-        { id: 'g03', url: 'uploads/WhatsApp Video 2026-06-03 at 20.12.57.mp4', type: 'video', caption: 'Luxury Dining & Live Counter Layout' },
-        { id: 'g04', url: 'uploads/WhatsApp Video 2026-06-03 at 20.12.44.mp4', type: 'video', caption: 'Shahi Presentation & Liquid Nitrogen Counters' },
-        { id: 'g05', url: 'uploads/WhatsApp Video 2026-06-03 at 20.15.40.mp4', type: 'video', caption: 'Royal Guest Dining Area Presentation' },
-        { id: 'g06', url: 'uploads/WhatsApp Video 2026-06-03 at 20.34.13.mp4', type: 'video', caption: 'Live Flambé & Stir Fry Counter' },
-        { id: 'g07', url: 'uploads/WhatsApp Video 2026-06-03 at 20.37.15.mp4', type: 'video', caption: 'Bespoke Dessert Display Counter' },
-        { id: 'g08', url: 'uploads/WhatsApp Image 2026-06-03 at 20.12.40.jpeg', type: 'image', caption: 'Gold Saffron Welcome Goblet Curation' },
-        { id: 'g09', url: 'uploads/WhatsApp Image 2026-06-03 at 20.12.45.jpeg', type: 'image', caption: 'Royal Tandoori Paneer Starter Presentation' },
-        { id: 'g10', url: 'uploads/WhatsApp Image 2026-06-03 at 20.12.46.jpeg', type: 'image', caption: 'Shahi Dal Bukhara Slow Cooking Pot' },
-        { id: 'g11', url: 'uploads/WhatsApp Image 2026-06-03 at 20.12.56.jpeg', type: 'image', caption: 'Liquid Nitrogen Rose Ice Cream Live Station' },
-        { id: 'g12', url: 'uploads/WhatsApp Image 2026-06-03 at 20.34.40.jpeg', type: 'image', caption: 'Heritage Pastry & Dessert Curation Platter' }
-    ];
+    if (!galleryDB || galleryDB.length === 0) {
+        galleryDB = [
+            { id: 'g01', url: 'uploads/WhatsApp Video 2026-06-03 at 20.12.56.mp4', type: 'video', caption: 'Heritage Catering Entrance Setup' },
+            { id: 'g02', url: 'uploads/WhatsApp Video 2026-06-03 at 20.12.56 (1).mp4', type: 'video', caption: 'Premium Buffet Service & Live Counters' },
+            { id: 'g03', url: 'uploads/WhatsApp Video 2026-06-03 at 20.12.57.mp4', type: 'video', caption: 'Luxury Dining & Live Counter Layout' },
+            { id: 'g04', url: 'uploads/WhatsApp Video 2026-06-03 at 20.12.44.mp4', type: 'video', caption: 'Shahi Presentation & Liquid Nitrogen Counters' },
+            { id: 'g05', url: 'uploads/WhatsApp Video 2026-06-03 at 20.15.40.mp4', type: 'video', caption: 'Royal Guest Dining Area Presentation' },
+            { id: 'g06', url: 'uploads/WhatsApp Video 2026-06-03 at 20.34.13.mp4', type: 'video', caption: 'Live Flambé & Stir Fry Counter' },
+            { id: 'g07', url: 'uploads/WhatsApp Video 2026-06-03 at 20.37.15.mp4', type: 'video', caption: 'Bespoke Dessert Display Counter' },
+            { id: 'g08', url: 'uploads/WhatsApp Image 2026-06-03 at 20.12.40.jpeg', type: 'image', caption: 'Gold Saffron Welcome Goblet Curation' },
+            { id: 'g09', url: 'uploads/WhatsApp Image 2026-06-03 at 20.12.45.jpeg', type: 'image', caption: 'Royal Tandoori Paneer Starter Presentation' },
+            { id: 'g10', url: 'uploads/WhatsApp Image 2026-06-03 at 20.12.46.jpeg', type: 'image', caption: 'Shahi Dal Bukhara Slow Cooking Pot' },
+            { id: 'g11', url: 'uploads/WhatsApp Image 2026-06-03 at 20.12.56.jpeg', type: 'image', caption: 'Liquid Nitrogen Rose Ice Cream Live Station' },
+            { id: 'g12', url: 'uploads/WhatsApp Image 2026-06-03 at 20.34.40.jpeg', type: 'image', caption: 'Heritage Pastry & Dessert Curation Platter' }
+        ];
+    }
     calendarRules = [];
 }
 
@@ -2805,18 +2794,30 @@ function renderGalleryPosts() {
     let container = document.getElementById('gallery-posts-grid');
     if(!container) return;
     container.innerHTML = '';
-    console.log("renderGalleryPosts: galleryDB size =", galleryDB ? galleryDB.length : null);
     if (!galleryDB || galleryDB.length === 0) {
         container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted); font-style: italic;">No gallery celebrations available to show.</div>`;
         return;
     }
     
     galleryDB.forEach(post => {
+        if (post.isBroken) {
+            container.innerHTML += `
+                <div class="gallery-card">
+                    <div class="gallery-media-wrapper" style="display:flex; align-items:center; justify-content:center; background:#1a1a1a; color:#888; flex-direction:column; padding:20px; text-align:center;">
+                        <i class="fa-solid fa-image-slash" style="font-size:2rem; margin-bottom:10px; color:#555;"></i>
+                        <span style="font-size:0.9rem;">Media temporarily unavailable</span>
+                    </div>
+                    <div class="gallery-caption">${post.caption}</div>
+                </div>
+            `;
+            return;
+        }
+
         let safeUrl = encodeURI(post.url);
-        let mediaHtml = post.type === 'video' 
+        let mediaHtml = post.type === 'video'
             ? `<video src="${safeUrl}" autoplay muted loop playsinline></video>`
             : `<img src="${safeUrl}" alt="${post.caption}">`;
-            
+
         container.innerHTML += `
             <div class="gallery-card">
                 <div class="gallery-media-wrapper">${mediaHtml}</div>
@@ -3002,7 +3003,7 @@ async function showAdminView() {
     renderAnalyticsSVG();
     renderCMSReviewsGrid();
     renderAdminGalleryList();
-}
+};
 
 window.switchAdminTab = function(tabId) {
     document.querySelectorAll('.admin-tab-content').forEach(tab => tab.classList.remove('active'));
@@ -3838,20 +3839,41 @@ window.uploadGalleryItem = async function() {
     }
     
     const file = fileInput.files[0];
-    const isVideo = file.type.startsWith('video');
+    const isVideo = file.type.startsWith('video') || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
     
-    const fileUrl = URL.createObjectURL(file);
-    
-    const newId = 'G' + (1000 + galleryDB.length);
-    const newPost = {
-        id: newId,
-        type: isVideo ? 'video' : 'image',
-        url: fileUrl,
-        caption: captionInput
-    };
-    
-    galleryDB.unshift(newPost);
-    alert("Media uploaded to Gallery successfully!");
+    const isHosted = window.location.protocol.startsWith('http');
+    if (isHosted) {
+        const fd = new FormData();
+        fd.append('mediaFile', file);
+        fd.append('caption', captionInput);
+        
+        try {
+            const res = await fetch('/api/gallery', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) {
+                await fetchDatabaseState();
+                alert("Media uploaded to Gallery and published live!");
+            } else {
+                alert(`Upload failed: ${data.error || 'Unknown error'}`);
+                return;
+            }
+        } catch (e) {
+            console.error("Admin gallery upload error:", e);
+            alert("Error uploading to server. Check console.");
+            return;
+        }
+    } else {
+        const fileUrl = URL.createObjectURL(file);
+        const newId = 'G' + (1000 + (galleryDB?.length || 0));
+        const newPost = {
+            id: newId,
+            type: isVideo ? 'video' : 'image',
+            url: fileUrl,
+            caption: captionInput
+        };
+        galleryDB.unshift(newPost);
+        alert("Demo Mode: Cached locally.");
+    }
     
     fileInput.value = '';
     document.getElementById('admin-gallery-caption').value = '';
@@ -3864,20 +3886,93 @@ window.renderAdminGalleryList = function() {
     const list = document.getElementById('admin-gallery-list');
     if(!list) return;
     list.innerHTML = '';
+    
+    let total = galleryDB.length;
+    let images = 0;
+    let videos = 0;
+    let broken = 0;
+
     galleryDB.forEach((post, idx) => {
+        if (post.type === 'video') videos++; else images++;
+        if (post.isBroken) broken++;
+        
+        let mediaPreview = '';
+        if (post.isBroken) {
+            mediaPreview = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#333; color:#ff4d4d;"><i class="fa-solid fa-triangle-exclamation"></i></div>`;
+        } else {
+            mediaPreview = post.type === 'video' ? `<video src="${post.url}" style="width:100%; height:100%; object-fit:cover;"></video>` : `<img src="${post.url}" style="width:100%; height:100%; object-fit:cover;">`;
+        }
+        
+        let filename = post.url ? post.url.replace('/uploads/', '') : 'Unknown';
+        let badgeHtml = post.isBroken ? `<span style="background:#ff4d4d; color:#fff; padding:2px 6px; border-radius:3px; font-size:0.7rem; font-weight:bold; margin-left:10px;">MISSING FILE</span>` : '';
+
         list.innerHTML += `
-            <div style="border:1px solid var(--border-color); padding:10px; border-radius:5px; display:flex; align-items:center; gap:10px; background:var(--bg-card);">
+            <div style="border:1px solid ${post.isBroken ? '#ff4d4d' : 'var(--border-color)'}; padding:10px; border-radius:5px; display:flex; align-items:center; gap:10px; background:var(--bg-card);">
                 <div style="width:80px; height:80px; background:#000; overflow:hidden; border-radius:4px; flex-shrink:0;">
-                    ${post.type === 'video' ? `<video src="${post.url}" style="width:100%; height:100%; object-fit:cover;"></video>` : `<img src="${post.url}" style="width:100%; height:100%; object-fit:cover;">`}
+                    ${mediaPreview}
                 </div>
                 <div style="flex:1;">
-                    <strong style="color:var(--primary);">${post.caption}</strong>
-                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">Type: ${post.type.toUpperCase()}</div>
+                    <strong style="color:var(--primary);">${post.caption} ${badgeHtml}</strong>
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">Type: ${post.type.toUpperCase()} | File: ${filename}</div>
                 </div>
-                <button class="secondary-btn border-btn small-btn" onclick="deleteGalleryItem(${idx})" style="padding:8px 12px; font-size:1rem; color:#ff4d4d; border-color:#ff4d4d;"><i class="fa-solid fa-trash"></i></button>
+                <div style="display:flex; gap:5px;">
+                    ${post.isBroken ? `<button class="secondary-btn border-btn small-btn" onclick="replaceGalleryItem(${idx})" style="padding:8px 12px; font-size:1rem;" title="Replace Media"><i class="fa-solid fa-upload"></i></button>` : ''}
+                    <button class="secondary-btn border-btn small-btn" onclick="deleteGalleryItem(${idx})" style="padding:8px 12px; font-size:1rem; color:#ff4d4d; border-color:#ff4d4d;"><i class="fa-solid fa-trash"></i></button>
+                </div>
             </div>
         `;
     });
+    
+    // Update local stats first
+    if(document.getElementById('stat-gallery-total')) document.getElementById('stat-gallery-total').innerText = total;
+    if(document.getElementById('stat-gallery-images')) document.getElementById('stat-gallery-images').innerText = images;
+    if(document.getElementById('stat-gallery-videos')) document.getElementById('stat-gallery-videos').innerText = videos;
+    if(document.getElementById('stat-gallery-broken')) document.getElementById('stat-gallery-broken').innerText = broken;
+    
+    // Fetch system health for true missing files and sync
+    if (window.location.protocol.startsWith('http')) {
+        fetch('/api/admin/system-health')
+            .then(res => res.json())
+            .then(data => {
+                if(data.brokenMedia !== undefined && document.getElementById('stat-gallery-missing')) {
+                    document.getElementById('stat-gallery-missing').innerText = data.brokenMedia;
+                }
+            })
+            .catch(console.error);
+    }
+};
+
+window.replaceGalleryItem = function(idx) {
+    const post = galleryDB[idx];
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/mp4';
+    input.onchange = async e => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const fd = new FormData();
+        fd.append('mediaFile', file);
+        fd.append('caption', post.caption); // reuse old caption
+        
+        try {
+            // Since we don't have a PUT endpoint, delete the old and upload the new.
+            await fetch('/api/gallery/' + post.id, { method: 'DELETE' });
+            const res = await fetch('/api/gallery', { method: 'POST', body: fd });
+            const data = await res.json();
+            if(data.success) {
+                await fetchDatabaseState?.();
+                renderGalleryPosts();
+                renderAdminGalleryList();
+                alert("Media replaced successfully!");
+            } else {
+                alert("Replace failed: " + data.error);
+            }
+        } catch(err) {
+            console.error(err);
+            alert("Error replacing media.");
+        }
+    };
+    input.click();
 };
 
 window.deleteGalleryItem = async function(idx) {
@@ -3891,6 +3986,7 @@ window.deleteGalleryItem = async function(idx) {
             }
         }
         galleryDB.splice(idx, 1);
+        await fetchDatabaseState?.(); // Sync with database
         renderGalleryPosts();
         renderAdminGalleryList();
     }
