@@ -3868,8 +3868,16 @@ window.renderAdminGalleryList = function() {
     });
 };
 
-window.deleteGalleryItem = function(idx) {
+window.deleteGalleryItem = async function(idx) {
     if(confirm("Are you sure you want to delete this media from the gallery?")) {
+        const item = galleryDB[idx];
+        if (window.location.protocol.startsWith('http')) {
+            try {
+                await fetch('/api/gallery/' + item.id, { method: 'DELETE' });
+            } catch (e) {
+                console.error('Delete error:', e);
+            }
+        }
         galleryDB.splice(idx, 1);
         renderGalleryPosts();
         renderAdminGalleryList();

@@ -6,17 +6,6 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Cloudinary config (optional - uses CLOUDINARY_URL env var)
-let cloudinary;
-try {
-    if (process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)) {
-        cloudinary = require('cloudinary').v2;
-        cloudinary.config({ secure: true });
-    }
-} catch (e) {
-    console.log('Cloudinary not configured, using local storage');
-}
-
 // Ensure uploads directory exists (ephemeral fallback for local dev)
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -1084,36 +1073,28 @@ app.get('/api/gallery', (req, res) => {
     res.json(getDB().gallery);
 });
 
+// Delete Gallery item
+app.delete('/api/gallery/:id', (req, res) => {
+    const db = getDB();
+    const { id } = req.params;
+    const idx = db.gallery.findIndex(item => item.id === id);
+    if (idx !== -1) {
+        db.gallery.splice(idx, 1);
+        saveDB(db);
+        return res.json({ success: true });
+    }
+    res.status(404).json({ error: 'Gallery item not found' });
+});
+
 // Post Media to Gallery (via file upload or link)
-app.post('/api/gallery', upload.single('mediaFile'), async (req, res) => {
+app.post('/api/gallery', upload.single('mediaFile'), (req, res) => {
     const db = getDB();
     let fileUrl = req.body.url;
     let fileType = req.body.type || 'image';
 
     if (req.file) {
-        // Check if Cloudinary is configured and available
-        const hasCloudinary = cloudinary && (process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET));
-        
-        if (hasCloudinary) {
-            try {
-                const result = await cloudinary.uploader.upload(req.file.path, {
-                    resource_type: req.file.mimetype.startsWith('video/') ? 'video' : 'image',
-                    folder: 'catering-gallery'
-                });
-                fileUrl = result.secure_url;
-                fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
-                // Clean up temp file
-                fs.unlinkSync(req.file.path);
-            } catch (e) {
-                console.error('Cloudinary upload error:', e);
-                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-                return res.status(500).json({ error: 'Cloudinary upload failed' });
-            }
-        } else {
-            // Local fallback (ephemeral on Render)
-            fileUrl = '/uploads/' + req.file.filename;
-            fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
-        }
+        fileUrl = '/uploads/' + req.file.filename;
+        fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
     }
 
     if (!fileUrl) {
@@ -1133,27 +1114,10 @@ app.post('/api/gallery', upload.single('mediaFile'), async (req, res) => {
 });
 
 // Upload video path for hero
-app.post('/api/cms/video', upload.single('videoFile'), async (req, res) => {
+app.post('/api/cms/video', upload.single('videoFile'), (req, res) => {
     const db = getDB();
     if (req.file) {
-        const hasCloudinary = cloudinary && (process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET));
-        
-        if (hasCloudinary) {
-            try {
-                const result = await cloudinary.uploader.upload(req.file.path, {
-                    resource_type: 'video',
-                    folder: 'catering-hero'
-                });
-                db.cms.hero_video = result.secure_url;
-                fs.unlinkSync(req.file.path);
-            } catch (e) {
-                console.error('Cloudinary upload error:', e);
-                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-                return res.status(500).json({ error: 'Cloudinary upload failed' });
-            }
-        } else {
-            db.cms.hero_video = '/uploads/' + req.file.filename;
-        }
+        db.cms.hero_video = '/uploads/' + req.file.filename;
         saveDB(db);
         return res.json({ success: true, videoUrl: db.cms.hero_video });
     }
