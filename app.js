@@ -17,7 +17,7 @@ let activePlateStyle = 'gold';
 let inventoryDB = [];
 let crmLeads = [];
 let reviewsDB = [];
-let galleryDB = [];
+let galleryDB = JSON.parse(localStorage.getItem('galleryDB')) || [];
 let calendarRules = [];
 let cmsConfig = {
     brand_font: 'Cormorant Garamond',
@@ -84,6 +84,15 @@ async function fetchDatabaseState() {
         cmsConfig = db.cms;
     } catch (err) {
         console.warn("REST Server offline, loading local mock database:", err);
+        // Only load mock data if galleryDB hasn't been loaded yet
+        if (!galleryDB || galleryDB.length === 0) {
+            const savedGallery = localStorage.getItem('galleryDB');
+            if (savedGallery) {
+                try {
+                    galleryDB = JSON.parse(savedGallery);
+                } catch (e) {}
+            }
+        }
         loadMockOfflineDatabase();
     }
 }
@@ -2488,6 +2497,7 @@ window.uploadCMSGalleryPost = async function() {
                 renderGalleryPosts();
                 fileInput.value = '';
                 capInput.value = '';
+                localStorage.setItem('galleryDB', JSON.stringify(galleryDB));
                 alert("Gallery post uploaded and published live!");
             } else {
                 alert(`Upload failed: ${data.error || 'Unknown error'}`);
@@ -2512,7 +2522,7 @@ window.uploadCMSGalleryPost = async function() {
         capInput.value = '';
         alert("Demo Mode: Simulated local file upload in gallery.");
     }
-}
+};
 
 // --- CLIENT REVIEWS & TESTIMONIALS SLIDER ---
 window.submitReview = async function() {

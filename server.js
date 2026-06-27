@@ -1040,13 +1040,6 @@ const upload = multer({
     limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
 });
 
-function handleUploadError(err, req, res, next) {
-    if (err instanceof multer.MulterError) {
-        return res.status(400).json({ error: `Upload error: ${err.message}` });
-    }
-    next(err);
-}
-
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
