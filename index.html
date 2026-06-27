@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khandelwal Caters - Royal Heritage Culinary Curation</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@200;300;400;500;600;700&family=Montserrat:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet Map CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="style.css?v=8.2">
+    <!-- CDN Packages for WebGL & Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+<body class="theme-gold">
+    
+    <!-- Fullscreen Sparkle VFX Background Canvas -->
+    <canvas id="vfx-canvas"></canvas>
+
+    <!-- HEADER & NAVIGATION -->
+    <header class="luxury-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <span class="logo-serif">Khandelwal</span>
+                <span class="logo-sans">Caters</span>
+            </div>
+            
+            <div class="mobile-menu-btn" onclick="toggleMobileMenu()" style="font-size: 1.5rem; cursor: pointer; color: var(--gold);">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+            
+            <nav class="main-nav" id="main-navigation">
+                <a href="#hero" class="nav-link active" onclick="closeMobileMenu()">Home</a>
+                <a href="#about" class="nav-link" onclick="closeMobileMenu()">About</a>
+                <a href="#experiences" class="nav-link" onclick="closeMobileMenu()">Experiences</a>
+                <a href="#menu-catalog" class="nav-link" onclick="closeMobileMenu()">Menu Curation</a>
+                <a href="#gallery" class="nav-link" onclick="closeMobileMenu()">Gallery</a>
+                <a href="#reviews" class="nav-link" onclick="closeMobileMenu()">Reviews</a>
+            </nav>
+
+            <div class="header-actions">
+                <button id="theme-mode-toggle-btn" class="secondary-btn border-btn small-btn" onclick="toggleGlobalLightDark()" style="display: none;"><i class="fa-solid fa-sun"></i> Light Mode</button>
+                <a href="tel:+919634885573" class="secondary-btn light-btn small-btn"><i class="fa-solid fa-phone"></i> <span class="hide-mobile">Call</span></a>
+                <a href="https://wa.me/919634885573" class="primary-btn gold-accent-btn small-btn"><i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 1.1em; margin-right: 3px;"></i> <span class="hide-mobile">WhatsApp</span></a>
+                <button id="track-btn" class="secondary-btn border-btn small-btn" onclick="openTrackModal()"><i class="fa-solid fa-compass"></i> <span class="hide-mobile">Track</span></button>
+                <button id="admin-login-btn" class="primary-btn gold-accent-btn small-btn" onclick="openAdminLoginModal()"><i class="fa-solid fa-lock"></i> <span class="hide-mobile">Admin</span></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CUSTOMER FRONTEND CONTAINER -->
+    <div id="customer-view">
+        
+        <!-- HERO BANNER SECTION -->
+        <section id="hero" class="hero-section">
+            <video id="hero-bg-video" src="uploads/hero-video.mp4" autoplay muted loop playsinline></video>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <!-- Theme Dot Preset Switcher (Hidden) -->
+                <div class="frontend-theme-panel" style="display: none;">
+                    <span class="theme-dot dot-gold active" onclick="switchThemePreset('theme-gold', this)"></span>
+                    <span class="theme-dot dot-emerald" onclick="switchThemePreset('theme-emerald', this)"></span>
+                    <span class="theme-dot dot-crimson" onclick="switchThemePreset('theme-crimson', this)"></span>
+                </div>
+                <div class="hero-tag">ROYAL HOSPITALITY</div>
+                <h1 id="hero-title">WHERE FLAVOUR MEETS LEGEND</h1>
+                <p id="hero-subtitle">Bespoke royal catering, heritage styling, and heirloom culinary arts for your most celebrated occasions.</p>
+                <div class="hero-buttons">
+                    <button onclick="document.getElementById('menu-catalog').scrollIntoView({behavior: 'smooth'})" class="primary-btn gold-accent-btn large-btn"><i class="fa-solid fa-utensils"></i> Explore Menu</button>
+                    <button onclick="document.getElementById('booking-inquiry').scrollIntoView({behavior: 'smooth'})" class="secondary-btn light-btn large-btn"><i class="fa-regular fa-envelope"></i> Book Curation</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- HERITAGE QUOTE INTRODUCTION SECTION -->
+        <section id="about" class="heritage-intro-section">
+            <div class="heritage-intro-container">
+                <span class="heritage-gold-tag">ESTD 1996 | THE JOURNEY</span>
+                <h2 class="heritage-quote-text">Born from the whispers of palace kitchens, perfected through a century of silence.</h2>
+                <div class="heritage-thin-line"></div>
+                <p class="heritage-sub-quote">
+                    Khandelwal Caters revives the culinary arts of royal courts. We do not just serve dishes; we recreate historical legacies in custom-styled plating and heritage table setups.
+                </p>
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;">Recognized as the premier catering service in Vrindavan for luxury events and bespoke fine dining.</p>
+                    <div style="display: flex; gap: 20px;">
+                        <a href="tel:+919634885573" class="secondary-btn border-btn small-btn">Book a Consultation</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EVENT EXPERIENCES SECTION -->
+        <section id="experiences" class="services-section">
+            <div class="section-header">
+                <span class="sub-title">WHAT WE CURATE</span>
+                <h2>Exquisite Experiences</h2>
+                <div class="gold-divider"></div>
+            </div>
+            
+            <div class="services-grid">
+                <!-- Card 1 -->
+                <div class="service-card" onclick="document.getElementById('booking-inquiry').scrollIntoView({behavior: 'smooth'})">
+                    <div class="service-img" style="background-image: url('uploads/WhatsApp Image 2026-06-03 at 20.12.40.jpeg');">
+                        <div class="service-overlay"></div>
+                    </div>
+                    <div class="service-details">
+                        <h3>The Chef's Table</h3>
+                        <p>Exclusive live cooking performance for premium groups. An evening where the chef curates custom dishes based on guests' personal palettes.</p>
+                        <span class="service-link">Inquire Booking <i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="service-card" onclick="document.getElementById('booking-inquiry').scrollIntoView({behavior: 'smooth'})">
+                    <div class="service-img" style="background-image: url('uploads/WhatsApp Image 2026-06-03 at 20.12.56.jpeg');">
+                        <div class="service-overlay"></div>
+                    </div>
+                    <div class="service-details">
+                        <h3>Private Haveli Curation</h3>
+                        <p>Bespoke dining setups in heritage estates, combining museum-quality decor, custom silver service, and candlelight styling.</p>
+                        <span class="service-link">Inquire Booking <i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="service-card" onclick="document.getElementById('booking-inquiry').scrollIntoView({behavior: 'smooth'})">
+                    <div class="service-img" style="background-image: url('uploads/WhatsApp Image 2026-06-03 at 20.12.45.jpeg');">
+                        <div class="service-overlay"></div>
+                    </div>
+                    <div class="service-details">
+                        <h3>Royal Banquet Feast</h3>
+                        <p>Grand wedding and event catering presenting a royal culinary court of heirloom recipes, live nitrogen chemistry, and visual majesty.</p>
+                        <span class="service-link">Inquire Booking <i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- THE ANCESTRAL MENU SHOWCASE -->
+        <section id="menu-catalog" class="planner-section">
+            <div class="section-header">
+                <span class="sub-title">LANGUAGE OF ANCESTORS</span>
+                <h2>The Curated Menu</h2>
+                <div class="gold-divider"></div>
+            </div>
+
+            <div class="planner-container">
+                <!-- Folio Type Selector -->
+                <div class="royal-menu-selector" style="justify-content: center;">
+                    <button class="menu-folio-btn active" onclick="switchActiveMenuPreset('custom', this)"><i class="fa-solid fa-border-all"></i> All Cuisines</button>
+                    <button class="menu-folio-btn" onclick="switchActiveMenuPreset('breakfast', this)"><i class="fa-solid fa-mug-saucer"></i> Breakfast Menu</button>
+                    <button class="menu-folio-btn" onclick="switchActiveMenuPreset('hitea', this)"><i class="fa-solid fa-mug-hot"></i> Hi-Tea Menu</button>
+                    <button class="menu-folio-btn" onclick="switchActiveMenuPreset('superexec', this)"><i class="fa-solid fa-crown"></i> Super Executive</button>
+                </div>
+
+                <!-- Minimal Binder Layout -->
+                <div class="royal-flipbook">
+                    <!-- Left Sidebar Course Filters -->
+                    <div class="book-sidebar">
+                        <div class="book-sidebar-header">
+                            <h4 id="book-selected-menu-title">All Cuisines</h4>
+                            <span>Royal Folio</span>
+                        </div>
+                        <div class="book-category-list">
+                            <button class="book-cat-btn active" id="btn-page-Drink" onclick="switchBookPage('Drink')">
+                                <i class="fa-solid fa-glass-water"></i> Drinks & Juices
+                            </button>
+                            <button class="book-cat-btn" id="btn-page-Starter" onclick="switchBookPage('Starter')">
+                                <i class="fa-solid fa-cookie"></i> Exquisite Starters
+                            </button>
+                            <button class="book-cat-btn" id="btn-page-Main" onclick="switchBookPage('Main')">
+                                <i class="fa-solid fa-bowl-food"></i> Shahi Mains
+                            </button>
+                            <button class="book-cat-btn" id="btn-page-Dessert" onclick="switchBookPage('Dessert')">
+                                <i class="fa-solid fa-ice-cream"></i> Royal Desserts
+                            </button>
+                        </div>
+                        <div style="font-size: 0.7rem; color: rgba(250, 249, 246, 0.4); text-align: center; border-top: 1px solid rgba(250,249,246,0.1); padding-top: 15px;">
+                            <i class="fa-solid fa-book-open"></i> Khandelwal Caters
+                        </div>
+                    </div>
+                    
+                    <!-- Pages Wrapper -->
+                    <div class="book-pages-wrapper">
+                        <!-- Drink Page -->
+                        <div class="book-page active" id="page-Drink" style="display: flex;">
+                            <div class="book-page-header">
+                                <h3>Drinks & Refreshments</h3>
+                                <span class="book-page-num">Page 1 / 4</span>
+                            </div>
+                            <div class="menu-items-inner-grid" id="grid-Drink"></div>
+                        </div>
+                        
+                        <!-- Starter Page -->
+                        <div class="book-page" id="page-Starter" style="display: none;">
+                            <div class="book-page-header">
+                                <h3>Exquisite Starters</h3>
+                                <span class="book-page-num">Page 2 / 4</span>
+                            </div>
+                            <div class="menu-items-inner-grid" id="grid-Starter"></div>
+                        </div>
+                        
+                        <!-- Main Page -->
+                        <div class="book-page" id="page-Main" style="display: none;">
+                            <div class="book-page-header">
+                                <h3>Shahi Main Courses</h3>
+                                <span class="book-page-num">Page 3 / 4</span>
+                            </div>
+                            <div class="menu-items-inner-grid" id="grid-Main"></div>
+                        </div>
+                        
+                        <!-- Dessert Page -->
+                        <div class="book-page" id="page-Dessert" style="display: none;">
+                            <div class="book-page-header">
+                                <h3>Royal Desserts</h3>
+                                <span class="book-page-num">Page 4 / 4</span>
+                            </div>
+                            <div class="menu-items-inner-grid" id="grid-Dessert"></div>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-top:15px;">Scroll through our heritage cuisine collections. Click any dish to add it to your custom menu curation.</p>
+            </div>
+
+            <!-- Cuisine Navigation Tabs -->
+            <div class="cuisine-nav-tabs">
+                <button class="cuisine-tab-btn active" onclick="scrollToCuisine('cuisine-superexec')">
+                    <i class="fa-solid fa-crown"></i>
+                    <span>Super Executive</span>
+                </button>
+                <button class="cuisine-tab-btn" onclick="scrollToCuisine('cuisine-breakfast')">
+                    <i class="fa-solid fa-mug-saucer"></i>
+                    <span>Breakfast</span>
+                </button>
+                <button class="cuisine-tab-btn" onclick="scrollToCuisine('cuisine-hitea')">
+                    <i class="fa-solid fa-mug-hot"></i>
+                    <span>Hi-Tea</span>
+                </button>
+                <button class="cuisine-tab-btn" onclick="scrollToCuisine('cuisine-gujarati')">
+                    <i class="fa-solid fa-om"></i>
+                    <span>Gujarati Royal</span>
+                </button>
+                <button class="cuisine-tab-btn" onclick="scrollToCuisine('cuisine-rajasthani')">
+                    <i class="fa-solid fa-fort-awesome"></i>
+                    <span>Royal Rajasthani</span>
+                </button>
+            </div>
+
+            <!-- CUISINE SCROLL MAGAZINE CONTAINER -->
+            <div class="cuisine-scroll-container" id="cuisine-scroll-container">
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- SUPER EXECUTIVE MENU                   -->
+                <!-- ═══════════════════════════════════════ -->
+                <div class="cuisine-section" id="cuisine-superexec">
+                    <div class="cuisine-section-hero">
+                        <div class="cuisine-hero-badge">PREMIUM COLLECTION</div>
+                        <h2 class="cuisine-hero-title"><i class="fa-solid fa-crown"></i> Super Executive Menu</h2>
+                        <p class="cuisine-hero-sub">The pinnacle of royal banquet dining — curate your perfect celebration feast from our most exquisite offerings.</p>
+                        <div class="cuisine-hero-line"></div>
+                    </div>
+                    <div id="superexec-grid-container"></div>
+                </div>
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- BREAKFAST MENU                         -->
+                <!-- ═══════════════════════════════════════ -->
+                <div class="cuisine-section" id="cuisine-breakfast">
+                    <div class="cuisine-section-hero">
+                        <div class="cuisine-hero-badge">MORNING RITUAL</div>
+                        <h2 class="cuisine-hero-title"><i class="fa-solid fa-mug-saucer"></i> Royal Breakfast Menu</h2>
+                        <p class="cuisine-hero-sub">Begin your celebrations with a heritage morning spread — fresh, wholesome, and crafted with love.</p>
+                        <div class="cuisine-hero-line"></div>
+                    </div>
+                    <div id="breakfast-grid-container"></div>
+                </div>
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- HI-TEA MENU                            -->
+                <!-- ═══════════════════════════════════════ -->
+                <div class="cuisine-section" id="cuisine-hitea">
+                    <div class="cuisine-section-hero">
+                        <div class="cuisine-hero-badge">AFTERNOON ELEGANCE</div>
+                        <h2 class="cuisine-hero-title"><i class="fa-solid fa-mug-hot"></i> Hi-Tea Menu</h2>
+                        <p class="cuisine-hero-sub">An elegant afternoon affair of savouries, pastries, and aromatic beverages for intimate gatherings.</p>
+                        <div class="cuisine-hero-line"></div>
+                    </div>
+                    <div id="hitea-grid-container"></div>
+                </div>
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- GUJARATI ROYAL CUISINE                 -->
+                <!-- ═══════════════════════════════════════ -->
+                <div class="cuisine-section" id="cuisine-gujarati">
+                    <div class="cuisine-section-hero gujarati-hero">
+                        <div class="cuisine-hero-badge">HERITAGE SERIES</div>
+                        <h2 class="cuisine-hero-title"><i class="fa-solid fa-om"></i> Gujarati Royal Cuisine</h2>
+                        <p class="cuisine-hero-sub">The vibrant flavours of Gujarat's royal kitchens — sweet, spiced, and rooted in century-old tradition.</p>
+                        <div class="cuisine-hero-line"></div>
+                    </div>
+                    <div id="gujarati-grid-container"></div>
+                </div>
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- ROYAL RAJASTHANI CUISINE               -->
+                <!-- ═══════════════════════════════════════ -->
+                <div class="cuisine-section" id="cuisine-rajasthani">
+                    <div class="cuisine-section-hero rajasthani-hero">
+                        <div class="cuisine-hero-badge">ROYAL COURT SERIES</div>
+                        <h2 class="cuisine-hero-title"><i class="fa-solid fa-fort-awesome"></i> Royal Rajasthani Cuisine</h2>
+                        <p class="cuisine-hero-sub">Forged in the desert palaces of Rajputana — bold, rustic, and steeped in royal heritage.</p>
+                        <div class="cuisine-hero-line"></div>
+                    </div>
+                    <div id="rajasthani-grid-container"></div>
+                </div>
+
+            </div>
+
+            <!-- Hidden legacy bindings to prevent JS errors -->
+            <div id="grid-Drink" style="display:none;"></div>
+            <div id="grid-Starter" style="display:none;"></div>
+            <div id="grid-Main" style="display:none;"></div>
+            <div id="grid-Dessert" style="display:none;"></div>
+            <div id="book-selected-menu-title" style="display:none;">All Cuisines</div>
+            <div class="step-content" id="step-1-content" style="display:none;"></div>
+            <div class="step-content" id="step-2-content" style="display:none;"></div>
+            <div class="step-content" id="step-3-content" style="display:none;"></div>
+            <div class="step-content" id="step-4-content" style="display:none;"></div>
+            <div id="summary-plate-count" style="display:none;">0 Items</div>
+            <div id="float-items-count" style="display:none;">0 Items</div>
+            <div id="summary-plate-price" style="display:none;">₹0</div>
+            <div id="float-plate-price" style="display:none;">₹0</div>
+            <div id="summary-addons-price" style="display:none;">₹0</div>
+            <div id="float-addons" style="display:none;">₹0</div>
+            <div id="summary-total-bill" style="display:none;">₹0</div>
+            <div id="float-total-bill" style="display:none;">₹0</div>
+            <div id="summary-dining-style" style="display:none;">Gold Rim</div>
+            <div id="float-dining-style" style="display:none;">Gold Rim</div>
+            <div id="summary-tablecloth" style="display:none;">Gold Silk</div>
+            <div id="summary-addons-list-names" style="display:none;">None</div>
+            <input type="checkbox" id="addon-nitrogen" style="display:none;">
+            <input type="checkbox" id="addon-ice" style="display:none;">
+            <input type="checkbox" id="addon-pizza" style="display:none;">
+            <input type="checkbox" id="addon-waiters" style="display:none;">
+            <input type="range" id="guest-count" value="200" style="display:none;">
+            <span id="guest-count-val" style="display:none;">200</span>
+            <span id="discount-tier-badge" style="display:none;">No Discount</span>
+        </section>
+
+        <!-- CHEF QUOTE BANNER SECTION -->
+        <section class="chef-quote-section">
+            <div class="chef-quote-container">
+                <div class="chef-quote-content">
+                    <span class="chef-title-tag">THE ART OF GASTRONOMY</span>
+                    <h2 class="chef-main-quote">"I do not make food. I make memory edible."</h2>
+                    <div class="chef-signature-area">
+                        <span class="chef-name">— Pradeep Khandelwal</span>
+                        <span class="chef-desc">Master Curation Director</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RECENT COMPLETED WORK & POSTS GALLERY -->
+        <section id="gallery" class="gallery-section">
+            <div class="section-header">
+                <span class="sub-title">OUR CREDENTIALS</span>
+                <h2>Recent Celebrations</h2>
+                <p>Real photos and videos uploaded from client celebrations and weddings.</p>
+                <div class="gold-divider"></div>
+            </div>
+
+            <div class="gallery-grid" id="gallery-posts-grid">
+                <!-- Populated dynamically via Javascript -->
+            </div>
+        </section>
+
+        <!-- CLIENT TESTIMONIALS SLIDER -->
+        <section id="reviews" class="reviews-section">
+            <div class="section-header">
+                <span class="sub-title">TESTIMONIALS</span>
+                <h2>Client Appreciations</h2>
+                <div class="gold-divider"></div>
+            </div>
+
+            <div class="reviews-container">
+                <div class="review-carousel" id="reviews-carousel-inner">
+                    <!-- Populated dynamically via Javascript -->
+                </div>
+            </div>
+            
+            <div class="text-center spacer-top">
+                <button class="secondary-btn border-btn" onclick="openReviewSubmissionModal()"><i class="fa-regular fa-comment"></i> Leave a Review</button>
+            </div>
+        </section>
+
+        <!-- RESERVATION / INQUIRY FORM SECTION (ZAROKHA STYLE) -->
+        <section id="booking-inquiry" class="heritage-intro-section" style="border-top:1px solid var(--border-color); background:#09090b;">
+            <div class="heritage-intro-container" style="max-width: 600px;">
+                <span class="heritage-gold-tag">AN EVENING AT KHANDELWAL</span>
+                <h2 class="heritage-quote-text" style="font-size:2.2rem; font-style:normal; margin-bottom:10px;">Book a Custom Curation</h2>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:40px;">Provide your contact information to submit a royal catering reservation inquiry.</p>
+                
+                <div class="form-group">
+                    <label for="cust-name">Your Full Name *</label>
+                    <input type="text" id="cust-name" class="form-control" placeholder="E.g. Pradeep Khandelwal">
+                </div>
+
+                <div class="form-group">
+                    <label for="cust-phone">WhatsApp Number *</label>
+                    <input type="tel" id="cust-phone" class="form-control" placeholder="E.g. +91 98765 43210">
+                </div>
+
+                <div class="form-group">
+                    <label for="event-date">Preferred Date *</label>
+                    <input type="date" id="event-date" class="form-control" onchange="validateEventDate()">
+                    <span id="date-status-msg" class="form-status-text" style="display:block; margin-top:10px; font-size:0.85rem;"></span>
+                </div>
+
+                <!-- Event Location Map Trigger -->
+                <div class="form-group">
+                    <label for="event-location">Event Location/Venue *</label>
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <input type="text" id="event-location" class="form-control" style="flex:1;" placeholder="Type address or search map...">
+                        <button type="button" class="primary-btn gold-accent-btn small-btn" onclick="openMapModal()"><i class="fa-solid fa-map-location-dot"></i> Select on Map</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inquiry-guests">Expected Guests count</label>
+                    <input type="number" id="inquiry-guests" class="form-control" value="200">
+                </div>
+
+                <div class="form-group">
+                    <label for="inquiry-notes">Special Curation Requests / Menu Preferences</label>
+                    <textarea id="inquiry-notes" class="form-control" rows="3" placeholder="Describe decoration themes, live counters, or ingredient preferences..."></textarea>
+                </div>
+
+                <div class="form-group" style="margin-top:40px;">
+                    <button class="primary-btn gold-accent-btn w-100" onclick="submitBookingRequest()"><i class="fa-solid fa-paper-plane"></i> Submit Inquiry Request</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- FLOATING AI CHAT WIDGET -->
+        <div class="ai-chat-widget collapsed" id="ai-chat-widget">
+            <div class="ai-chat-header" onclick="toggleAIChat()">
+                <div style="display:flex; align-items:center; gap: 15px;">
+                    <div class="ai-avatar"><i class="fa-solid fa-robot"></i></div>
+                    <strong>Virtual Chef Assistant</strong>
+                </div>
+                <i class="fa-solid fa-chevron-up" id="ai-toggle-icon"></i>
+            </div>
+            <div class="ai-chat-body" id="ai-chat-body">
+                <div class="chat-msg ai-msg">Namaste! I am Pradeep Khandelwal, owner of Khandelwal Caters. Let me know your guest count or cuisine preferences, and I will recommend the perfect heritage package for you!</div>
+            </div>
+            <div class="ai-chat-input" id="ai-chat-input-area" style="display:none;">
+                <input type="text" id="ai-user-input" placeholder="Type your message..." onkeypress="handleAIKeyPress(event)">
+                <button onclick="sendAIMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ADMIN PORTAL VIEW CONTAINER (HIDDEN BY DEFAULT) -->
+    <div id="admin-view" style="display: none;">
+        <div class="admin-wrapper">
+            
+            <!-- Admin Top bar -->
+            <div class="admin-top-bar">
+                <div class="logo-area">
+                    <span class="logo-serif">Khandelwal</span>
+                    <span class="logo-sans">Caters <span class="badge admin-badge">Owner ERP</span></span>
+                </div>
+                
+                <div class="admin-actions">
+                    <button id="admin-mode-toggle-btn" class="secondary-btn border-btn small-btn" onclick="toggleGlobalLightDark()" style="display: none;"><i class="fa-solid fa-sun"></i> Light Mode</button>
+                    <div class="skin-selector" style="display: none;">
+                        <label for="admin-skin"><i class="fa-solid fa-palette"></i> Switch Theme: </label>
+                        <select id="admin-skin" onchange="changeThemeSkin(this.value)">
+                            <option value="theme-gold">Golden Luxury</option>
+                            <option value="theme-emerald">Midnight Emerald</option>
+                            <option value="theme-crimson">Royal Crimson</option>
+                        </select>
+                    </div>
+                    <button class="secondary-btn border-btn small-btn" onclick="logoutAdmin()"><i class="fa-solid fa-power-off"></i> Exit Admin Mode</button>
+                </div>
+            </div>
+
+            <div class="admin-layout">
+                <!-- Admin Sidebar -->
+                <aside class="admin-sidebar">
+                    <nav class="admin-nav">
+                        <button class="admin-nav-btn active" id="btn-tab-crm" onclick="switchAdminTab('crm')"><i class="fa-solid fa-users-rectangle"></i> Lead CRM Pipeline</button>
+                        <button class="admin-nav-btn" id="btn-tab-kot" onclick="switchAdminTab('kot')"><i class="fa-solid fa-fire-burner"></i> Kitchen Orders (KOT)</button>
+                        <button class="admin-nav-btn" id="btn-tab-calendar" onclick="switchAdminTab('calendar')"><i class="fa-solid fa-calendar-check"></i> Date Locker & Surcharge</button>
+                        <button class="admin-nav-btn" id="btn-tab-inventory" onclick="switchAdminTab('inventory')"><i class="fa-solid fa-clipboard-list"></i> Menu Inventory Manager</button>
+                        <button class="admin-nav-btn" id="btn-tab-operations" onclick="switchAdminTab('operations')"><i class="fa-solid fa-truck-ramp-box"></i> Roster & Payroll ERP</button>
+                        <button class="admin-nav-btn" id="btn-tab-financials" onclick="switchAdminTab('financials')"><i class="fa-solid fa-chart-line"></i> Financial Analytics</button>
+                        <button class="admin-nav-btn" id="btn-tab-cms" onclick="switchAdminTab('cms')"><i class="fa-solid fa-pen-to-square"></i> CMS Customizer</button>
+                        <button class="admin-nav-btn" id="btn-tab-gallery" onclick="switchAdminTab('gallery')"><i class="fa-solid fa-images"></i> Gallery Manager</button>
+                    </nav>
+                </aside>
+
+                <!-- Admin Tab Contents Panel -->
+                <main class="admin-content-panel">
+                    <!-- Global Admin Quick Stats Header -->
+                    <div class="admin-stats-grid">
+                        <div class="stat-card" onclick="drillDownStat('revenue')" style="cursor:pointer;">
+                            <div class="stat-icon"><i class="fa-solid fa-coins text-success"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-label">Total Revenue</span>
+                                <strong class="stat-value" id="stat-total-revenue">₹0</strong>
+                            </div>
+                        </div>
+                        <div class="stat-card" onclick="drillDownStat('confirmed')" style="cursor:pointer;">
+                            <div class="stat-icon"><i class="fa-solid fa-calendar-check text-warning"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-label">Confirmed Events</span>
+                                <strong class="stat-value" id="stat-confirmed-events">0</strong>
+                            </div>
+                        </div>
+                        <div class="stat-card" onclick="drillDownStat('pending')" style="cursor:pointer;">
+                            <div class="stat-icon"><i class="fa-solid fa-hourglass-start highlight-gold"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-label">Pending Leads</span>
+                                <strong class="stat-value" id="stat-pending-leads">0</strong>
+                            </div>
+                        </div>
+                        <div class="stat-card" onclick="drillDownStat('payroll')" style="cursor:pointer;">
+                            <div class="stat-icon"><i class="fa-solid fa-users text-danger"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-label">Rostered Payroll</span>
+                                <strong class="stat-value" id="stat-roster-payroll">₹0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 1: B2B CRM DRAG AND DROP KANBAN BOARD -->
+                    <div id="tab-crm" class="admin-tab-content active">
+                        <div class="dashboard-header-row">
+                            <div>
+                                <h3>Lead CRM Pipeline</h3>
+                                <p class="tab-desc">Drag and drop reservation inquiries across execution stages to sync roster calculations.</p>
+                            </div>
+                        </div>
+                        <!-- Kanban Columns Board -->
+                        <div class="crm-kanban-board">
+                            <div class="crm-column" data-status="Pending" ondragover="allowCRMDrop(event)" ondrop="dropCRMLead(event, 'Pending')" ondragenter="dragCRMEnter(event, this)" ondragleave="dragCRMLeave(event, this)">
+                                <div class="crm-column-header">
+                                    <span>Inbound Requests</span>
+                                    <span class="count-badge" id="count-lead-pending">0</span>
+                                </div>
+                                <div class="crm-card-list" id="crm-list-pending">
+                                    <!-- Cards populated dynamically -->
+                                </div>
+                            </div>
+                            <div class="crm-column" data-status="Negotiation" ondragover="allowCRMDrop(event)" ondrop="dropCRMLead(event, 'Negotiation')" ondragenter="dragCRMEnter(event, this)" ondragleave="dragCRMLeave(event, this)">
+                                <div class="crm-column-header" style="border-bottom-color: #FFC400;">
+                                    <span>Under Review</span>
+                                    <span class="count-badge" id="count-lead-negotiation" style="background:rgba(255,196,0,0.15); color:#FFC400;">0</span>
+                                </div>
+                                <div class="crm-card-list" id="crm-list-negotiation">
+                                    <!-- Cards populated dynamically -->
+                                </div>
+                            </div>
+                            <div class="crm-column" data-status="Approved" ondragover="allowCRMDrop(event)" ondrop="dropCRMLead(event, 'Approved')" ondragenter="dragCRMEnter(event, this)" ondragleave="dragCRMLeave(event, this)">
+                                <div class="crm-column-header" style="border-bottom-color: #00E676;">
+                                    <span>Confirmed & Booked</span>
+                                    <span class="count-badge" id="count-lead-approved" style="background:rgba(0,230,118,0.15); color:#00E676;">0</span>
+                                </div>
+                                <div class="crm-card-list" id="crm-list-approved">
+                                    <!-- Cards populated dynamically -->
+                                </div>
+                            </div>
+                            <div class="crm-column" data-status="Lost" ondragover="allowCRMDrop(event)" ondrop="dropCRMLead(event, 'Lost')" ondragenter="dragCRMEnter(event, this)" ondragleave="dragCRMLeave(event, this)">
+                                <div class="crm-column-header" style="border-bottom-color: #FF1744;">
+                                    <span>Archived / Lost</span>
+                                    <span class="count-badge" id="count-lead-lost" style="background:rgba(255,23,68,0.15); color:#FF1744;">0</span>
+                                </div>
+                                <div class="crm-card-list" id="crm-list-lost">
+                                    <!-- Cards populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: KITCHEN DISPLAY SYSTEM (KOT) -->
+                    <div id="tab-kot" class="admin-tab-content">
+                        <h3>Kitchen Order Tickets (KOT)</h3>
+                        <p class="tab-desc">Live production updates dispatched straight from client custom menus.</p>
+                        <div class="kot-grid" id="kot-grid">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: VISUAL DATE LOCKER CALENDAR -->
+                    <div id="tab-calendar" class="admin-tab-content">
+                        <h3>Date Locker & Peak Muhurat Management</h3>
+                        <p class="tab-desc">Mark busy season dates with a 15% surcharge or lock out sold-out dates completely.</p>
+                        <div class="calendar-admin-grid" style="display:grid; grid-template-columns: 1.8fr 1fr; gap:40px;">
+                            <div class="panel-card" style="margin-bottom:0;">
+                                <div class="calendar-controller-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                                    <button class="secondary-btn border-btn" style="padding:10px 15px;" onclick="adjustCalendarMonth(-1)"><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                                    <h4 id="calendar-month-year" style="font-size:1.4rem;">November 2026</h4>
+                                    <button class="secondary-btn border-btn" style="padding:10px 15px;" onclick="adjustCalendarMonth(1)">Next <i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div class="calendar-days-heading" style="display:grid; grid-template-columns: repeat(7, 1fr); text-align:center; font-weight:700; margin-bottom:10px; color:var(--text-muted); font-size:0.8rem;">
+                                    <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+                                </div>
+                                <div class="visual-calendar-grid" id="visual-calendar-grid">
+                                    <!-- Visual dates nodes -->
+                                </div>
+                            </div>
+                            <div class="panel-card" style="margin-bottom:0;">
+                                <h4>Configure Calendar Rule</h4>
+                                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:25px;">Set up custom pricing multipliers dynamically.</p>
+                                <div class="form-group">
+                                    <label>Selected Date</label>
+                                    <input type="text" id="lock-date-input" class="form-control" style="padding-left:20px;" placeholder="YYYY-MM-DD" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Action Rule</label>
+                                    <select id="date-action" class="form-control" style="padding-left:20px;" onchange="toggleSurchargeInput(this.value)">
+                                        <option value="unlock">Standard Day (Available)</option>
+                                        <option value="surcharge">Apply Peak Day Surcharge</option>
+                                        <option value="block">Sold Out (Block Booking)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="surcharge-input-group" style="display:none;">
+                                    <label>Surcharge Percentage (%)</label>
+                                    <input type="number" id="surcharge-pct" class="form-control" style="padding-left:20px;" min="1" max="100" value="15">
+                                </div>
+                                <button class="primary-btn gold-accent-btn w-100" onclick="applyCalendarConfig()"><i class="fa-solid fa-floppy-disk"></i> Apply Config Rules</button>
+                                <hr style="border:0; border-top:1px solid var(--border-color); margin:30px 0;">
+                                <h4>Active Surcharges & Blocks</h4>
+                                <table class="luxury-table" style="margin-top:15px; font-size:0.85rem;">
+                                    <thead>
+                                        <tr style="background:rgba(0,0,0,0.05);">
+                                            <th style="padding:10px 15px;">Date</th>
+                                            <th style="padding:10px 15px;">Type</th>
+                                            <th style="padding:10px 15px;">Multiplier</th>
+                                            <th style="padding:10px 15px;">Remove</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="calendar-rules-tbody">
+                                        <!-- Active rules populated -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: MENU INVENTORY MANAGER -->
+                    <div id="tab-inventory" class="admin-tab-content">
+                        <div class="dashboard-header-row">
+                            <div>
+                                <h3>Menu Database & Stock Status</h3>
+                                <p class="tab-desc">Maintain active stock statuses, add premium dishes, and adjust base pricing scales.</p>
+                            </div>
+                            <button class="primary-btn gold-accent-btn" onclick="openNewInventoryItemModal()"><i class="fa-solid fa-plus"></i> Add New Dish Item</button>
+                        </div>
+                        <div class="panel-card" style="padding:0; overflow:hidden;">
+                            <table class="luxury-table">
+                                <thead>
+                                    <tr>
+                                        <th>Dish Name</th>
+                                        <th>Cuisine Course</th>
+                                        <th>Base Plate Price</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-inventory-tbody">
+                                    <!-- Populated dynamically via Javascript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB 5: STAFF DUTY ROSTER & PAYROLL ERP -->
+                    <div id="tab-operations" class="admin-tab-content">
+                        <h3>Duty Roster & Wage Sheet ERP</h3>
+                        <p class="tab-desc">Monitor shift scheduling for chefs, servers, and cleaning teams with automatic budget allocations.</p>
+                        <div class="staff-payroll-summary" style="display:flex; gap:20px; margin-bottom:20px;">
+                            <div class="slip-box" style="flex:1; background:var(--bg-card); border:1px solid var(--border-color); padding:20px; border-radius:8px; text-align:center;">
+                                <h5 style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase;">Rostered Crew</h5>
+                                <strong id="roster-staff-count" style="font-size:1.4rem; color:var(--text-main);">0 Personnel</strong>
+                            </div>
+                            <div class="slip-box" style="flex:1; background:var(--bg-card); border:1px solid var(--border-color); padding:20px; border-radius:8px; text-align:center;">
+                                <h5 style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase;">Accumulated Shift Cost</h5>
+                                <strong id="roster-total-payroll" style="font-size:1.4rem; color:var(--text-main);">₹0</strong>
+                            </div>
+                            <div class="slip-box" style="flex:1; background:var(--bg-card); border:1px solid var(--border-color); padding:20px; border-radius:8px; text-align:center;">
+                                <h5 style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase;">Duty Status</h5>
+                                <strong style="font-size:1.4rem; color:#00E676;">Verified ✅</strong>
+                            </div>
+                        </div>
+                        <div class="panel-card" style="padding:0; overflow:hidden;">
+                            <table class="luxury-table">
+                                <thead>
+                                    <tr>
+                                        <th>Personnel Name</th>
+                                        <th>Assigned Shift Event</th>
+                                        <th>Crew Role</th>
+                                        <th>Logged Time</th>
+                                        <th>Hour Wage Rate</th>
+                                        <th>Accumulated Payout</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="roster-table-body">
+                                    <!-- Populated dynamically via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB 6: FINANCIAL STATS & ANALYTICS -->
+                    <div id="tab-financials" class="admin-tab-content">
+                        <h3>Financial Performance Analytics</h3>
+                        <p class="tab-desc">Detailed accounting graphs, cash flows, and profit margin analysis built on confirmed reservations.</p>
+                        <div class="charts-grid" style="display:grid; grid-template-columns: 2fr 1fr; gap:40px; margin-top:20px;">
+                            <div class="panel-card" style="margin-bottom:0;">
+                                <h4>Revenue vs Cost & Net Profit Timeline</h4>
+                                <div class="chart-canvas-container" id="chart-svg-container">
+                                    <!-- Interactive SVG injected here -->
+                                </div>
+                            </div>
+                            <div class="panel-card" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:space-between;">
+                                <div>
+                                    <h4>Net Operating Margins</h4>
+                                    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:30px;">Summary stats built on all approved events.</p>
+                                    <div style="display:flex; flex-direction:column; gap:20px;">
+                                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                                            <span style="color:var(--text-muted);">Confirmed Revenue:</span>
+                                            <strong class="text-success" id="fin-revenue">₹0</strong>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                                            <span style="color:var(--text-muted);">Operation Expenditures:</span>
+                                            <strong class="text-danger" id="fin-expenses">₹0</strong>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                                            <span style="color:var(--text-muted);">Net Profit:</span>
+                                            <strong class="highlight-gold" id="fin-profit">₹0</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="primary-btn gold-accent-btn w-100" style="margin-top:40px;" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> Download Master Ledger PDF</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 7: CMS CUSTOMIZER -->
+                    <div id="tab-cms" class="admin-tab-content">
+                        <h3>White Label CMS Customizer</h3>
+                        <p class="tab-desc">Edit frontend hero text, update background loops, and review/publish client reviews instantly.</p>
+                        <div class="cms-branding-panel" style="margin-top:20px;">
+                            <div class="panel-card" style="margin-bottom:0;">
+                                <h4>Branding Identity</h4>
+                                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">Alter core visual parameters of the website.</p>
+                                <div class="form-group">
+                                    <label>Branding Primary Font</label>
+                                    <select id="cms-font-select" class="form-control" onchange="updateBrandFont(this.value)">
+                                        <option value="Cormorant Garamond">Cormorant Garamond (Royal Classic)</option>
+                                        <option value="Outfit">Outfit (Luxury Serif-Sans)</option>
+                                        <option value="Montserrat">Montserrat (Modern Clean)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Theme Color Accent</label>
+                                    <div class="color-picker-box">
+                                        <input type="color" id="cms-color-picker" value="#c5a880" oninput="updateBrandColorAccent(this.value)">
+                                        <strong id="cms-color-val" style="color:var(--primary);">#c5a880</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel-card" style="margin-bottom:0;">
+                                <h4>Hero Content CMS</h4>
+                                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">Upload and modify banner sections live.</p>
+                                <div class="form-group">
+                                    <label for="cms-hero-title">Main Hero Title Text</label>
+                                    <input type="text" id="cms-hero-title" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cms-hero-sub">Sub-hero Description</label>
+                                    <textarea id="cms-hero-sub" class="form-control" rows="3" style="font-family:inherit;"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cms-hero-video-upload">Background Video (.mp4 from PC)</label>
+                                    <input type="file" id="cms-hero-video-upload" class="form-control" accept="video/mp4" onchange="uploadHeroVideo(this)">
+                                    <span id="cms-video-upload-status" style="font-size:0.75rem; color:var(--gold); margin-top:5px; display:block;"></span>
+                                </div>
+                                <button class="primary-btn gold-accent-btn w-100" onclick="saveCMSBanners()"><i class="fa-solid fa-circle-check"></i> Publish Hero Changes</button>
+                            </div>
+                        </div>
+
+                        <!-- CMS Image Gallery Uploader -->
+                        <div class="panel-card" style="margin-bottom:40px;">
+                            <h4>Add Live Event Media to Gallery</h4>
+                            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">Select photos/videos from your local PC to instantly display them in the front page gallery.</p>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                                <div class="form-group" style="margin:0;">
+                                    <label for="cms-gallery-file-upload">Choose Media File *</label>
+                                    <input type="file" id="cms-gallery-file-upload" class="form-control" accept="image/*,video/*">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label for="cms-gallery-cap">Gallery Caption *</label>
+                                    <input type="text" id="cms-gallery-cap" class="form-control" placeholder="E.g. Royal Marwari Wedding Dinner at Taj">
+                                </div>
+                            </div>
+                            <button class="primary-btn gold-accent-btn" onclick="uploadCMSGalleryPost()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Media from Device</button>
+                        </div>
+
+                        <!-- CMS Testimonials Approvals Panel -->
+                        <div class="panel-card" style="margin-bottom:0;">
+                            <h4>Reviews & Testimonials Approvals</h4>
+                            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:25px;">Approve or delete reviews submitted by customers.</p>
+                            <div class="cms-reviews-grid" id="cms-reviews-grid" style="display:flex; flex-direction:column; gap:15px;">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 8: GALLERY MANAGER -->
+                    <div id="tab-gallery" class="admin-tab-content">
+                        <div class="dashboard-header-row">
+                            <div>
+                                <h3>Gallery Manager</h3>
+                                <p class="tab-desc">Upload new celebration photos and videos to the public gallery.</p>
+                            </div>
+                        </div>
+                        <div class="content-card">
+                            <div class="form-group">
+                                <label>Upload Media File</label>
+                                <input type="file" id="admin-gallery-file" class="form-control" accept="image/*,video/mp4">
+                            </div>
+                            <div class="form-group">
+                                <label>Caption / Event Name</label>
+                                <input type="text" id="admin-gallery-caption" class="form-control" placeholder="e.g. Royal Wedding at Jaipur">
+                            </div>
+                            <button class="primary-btn gold-accent-btn" onclick="uploadGalleryItem()"><i class="fa-solid fa-upload"></i> Upload to Gallery</button>
+                            
+                            <hr style="margin:30px 0; border-color:var(--border-color);">
+                            <h4>Current Gallery Items</h4>
+                            <div id="admin-gallery-list" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:20px;">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAP PICKER MODAL -->
+    <div id="modal-map-picker" class="modal-overlay">
+        <div class="modal-content" style="max-width: 650px; padding: 30px; text-align: left; background: var(--bg-card); border: 2px solid var(--gold); border-radius: var(--border-radius);">
+            <button class="modal-close-btn" onclick="closeModal('modal-map-picker')" style="background: transparent; color: var(--text-main); font-size: 1.5rem;"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="font-family: var(--serif-font); color: var(--text-main); font-size: 1.8rem; margin-bottom: 5px;"><i class="fa-solid fa-map-location-dot text-gold"></i> Select Event Location</h3>
+            <p style="color:var(--text-muted); margin-bottom:15px; font-size:0.85rem;">Search for your event venue, click anywhere on the map to pin it, and click Confirm to set it as your event location.</p>
+            
+            <div class="map-search-bar" style="display:flex; gap:10px; margin-bottom:15px;">
+                <input type="text" id="map-search-input" class="form-control" placeholder="Search address, hotel, resort or city..." onkeypress="handleMapSearchKeyPress(event)">
+                <button class="primary-btn gold-accent-btn" onclick="searchMapAddress()"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            </div>
+            
+            <div id="map-container" style="height: 350px; border-radius: 10px; border: 1.5px solid var(--border-color); margin-bottom: 20px; position: relative; z-index: 1;"></div>
+            
+            <div class="selected-address-box" style="background: var(--primary-glow); border: 1px solid var(--primary); padding: 12px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-circle-info text-emerald" style="color: var(--primary);"></i>
+                <span id="selected-address-text" style="font-size:0.85rem; font-weight:600; color:var(--text-main);">Type in search or click on the map to pick a location.</span>
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; gap:15px;">
+                <button class="secondary-btn border-btn" onclick="closeModal('modal-map-picker')" style="padding: 10px 20px; font-size: 0.85rem;">Cancel</button>
+                <button class="primary-btn gold-accent-btn" onclick="confirmMapLocation()" style="padding: 10px 20px; font-size: 0.85rem;"><i class="fa-solid fa-check"></i> Confirm Location</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D DISH POPUP MODAL OVERLAY -->
+    <div id="dish-3d-modal" class="modal-overlay" onclick="close3DDishModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-close-btn" onclick="close3DDishModal()"><i class="fa-solid fa-xmark"></i></div>
+            <div class="dish-modal-layout">
+                <div class="dish-modal-canvas-area">
+                    <canvas id="dish-modal-canvas" class="dish-modal-canvas"></canvas>
+                    <div style="position: absolute; bottom: 20px; left: 20px; font-size: 0.75rem; color: #BBB; background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 20px; pointer-events: none; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-arrows-to-eye"></i> Drag to rotate | Scroll to zoom
+                    </div>
+                </div>
+                <div class="dish-modal-details-area">
+                    <div>
+                        <h2 id="dish-modal-title" class="dish-modal-title">Dish Title</h2>
+                        <div id="dish-modal-price" class="dish-modal-price" style="display: none;">₹0</div>
+                        <p id="dish-modal-desc" class="dish-modal-desc">Dish description goes here.</p>
+                        
+                        <!-- Nutrition breakdown -->
+                        <div class="nutrients-panel-widget" style="padding: 20px; margin-top: 10px; border: 1px solid var(--border-color); background: transparent; border-radius: 8px;">
+                            <div class="nutrients-grid" style="margin: 0; gap: 10px;">
+                                <div class="nutrient-box" style="padding: 8px;"><span class="val" id="modal-cal" style="font-size:1.1rem; color:var(--primary);">0</span><span class="lbl" style="font-size:0.6rem;">Calories</span></div>
+                                <div class="nutrient-box" style="padding: 8px;"><span class="val" id="modal-protein" style="font-size:1.1rem; color:var(--primary);">0g</span><span class="lbl" style="font-size:0.6rem;">Protein</span></div>
+                                <div class="nutrient-box" style="padding: 8px;"><span class="val" id="modal-carbs" style="font-size:1.1rem; color:var(--primary);">0g</span><span class="lbl" style="font-size:0.6rem;">Carbs</span></div>
+                                <div class="nutrient-box" style="padding: 8px;"><span class="val" id="modal-fat" style="font-size:1.1rem; color:var(--primary);">0g</span><span class="lbl" style="font-size:0.6rem;">Fats</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="modal-add-to-menu-btn" class="primary-btn gold-accent-btn" onclick="toggleMenuItemFromModal()" style="margin-top: 25px;"><i class="fa-solid fa-plus"></i> Add to Custom Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADMIN LOGIN -->
+    <div id="modal-admin-login" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px; padding: 40px; text-align: center;">
+            <button class="modal-close-btn" onclick="closeModal('modal-admin-login')"><i class="fa-solid fa-xmark"></i></button>
+            <h3>Executive Login</h3>
+            <p style="color:var(--text-muted); margin-bottom:30px;">Access your owner ERP analytics and CRM controls.</p>
+            <div class="form-group">
+                <input type="password" id="admin-pin" class="form-control" style="padding-left:20px; font-size:2rem; text-align:center; letter-spacing:8px;" placeholder="PIN Code">
+            </div>
+            <button class="primary-btn gold-accent-btn w-100" onclick="verifyAdminLogin()"><i class="fa-solid fa-key"></i> Verify Access Pin</button>
+        </div>
+    </div>
+
+    <!-- MODAL: TRACK BOOKING -->
+    <div id="modal-track" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px; padding: 40px; text-align: center;">
+            <button class="modal-close-btn" onclick="closeModal('modal-track')"><i class="fa-solid fa-xmark"></i></button>
+            <h3>Track Your Curation</h3>
+            <p style="color:var(--text-muted); margin-bottom:30px;">Input your WhatsApp number to check status updates.</p>
+            <div class="form-group">
+                <input type="tel" id="track-phone" class="form-control" style="padding-left:20px;" placeholder="+91 98765 43210">
+            </div>
+            <button class="primary-btn gold-accent-btn w-100" onclick="checkBookingStatus()"><i class="fa-solid fa-magnifying-glass"></i> Track Order</button>
+            <div class="alert-box text-success" id="track-result" style="display:none; margin-top:20px;"></div>
+        </div>
+    </div>
+
+    <!-- CUSTOMER FOOTER -->
+    <footer class="luxury-footer" style="background:var(--bg-card); border-top:1px solid var(--border-color); text-align:center; padding:50px 20px; margin-top:50px;">
+        <h2 style="font-family:var(--display-font); color:var(--primary); font-size:2.5rem; letter-spacing:2px; margin-bottom:15px;">THANK YOU</h2>
+        <p style="color:var(--text-muted); font-size:1.1rem; margin-bottom:20px;">We look forward to making your occasion royal and memorable.</p>
+        <p style="font-size:1.5rem; color:#fff; font-weight:bold;">
+            <i class="fa-solid fa-phone" style="color:var(--primary); margin-right:10px;"></i> 9634885573
+        </p>
+        <div style="margin-top:30px;">
+            <a href="tel:+919634885573" class="secondary-btn light-btn large-btn" style="margin-right:10px; display:inline-block; text-decoration:none;"><i class="fa-solid fa-phone"></i> Call Now</a>
+            <button class="primary-btn gold-accent-btn large-btn" onclick="window.open('https://wa.me/919634885573?text=Hi%20Khandelwal%20Caters,%20I%20would%20like%20to%20know%20more%20about%20your%20services.', '_blank')">
+                <i class="fa-brands fa-whatsapp"></i> WhatsApp Us
+            </button>
+        </div>
+    </footer>
+
+    <!-- MODAL: CUSTOMER REVIEW SUBMISSION -->
+    <div id="modal-review" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px; padding: 40px;">
+            <button class="modal-close-btn" onclick="closeModal('modal-review')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-center">Share Your Appreciations</h3>
+            <p class="text-center" style="color:var(--text-muted); margin-bottom:30px;">Your feedback helps us maintain our royal heritage quality.</p>
+            
+            <div class="form-group">
+                <label for="review-name">Your Full Name *</label>
+                <input type="text" id="review-name" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="review-text">Review Comment *</label>
+                <textarea id="review-text" class="form-control" rows="4" style="font-family:inherit;"></textarea>
+            </div>
+
+            <button class="primary-btn gold-accent-btn w-100" onclick="submitReview()"><i class="fa-solid fa-paper-plane"></i> Submit Feedback</button>
+        </div>
+    </div>
+
+    <!-- MODAL: CRM LEAD DETAILS DRAWER (SLIDE IN RIGHT PANEL) -->
+    <div id="crm-lead-drawer" class="crm-detail-drawer">
+        <button class="crm-drawer-close" onclick="closeCRMDrawer()"><i class="fa-solid fa-xmark"></i></button>
+        <div id="crm-drawer-content" style="display:flex; flex-direction:column; height:100%;">
+            <!-- Populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Main Logic Script -->
+    <script src="app.js?v=8.2"></script>
+    <script>
+        // Smooth scroll for nav links and scrolled header effect
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('.luxury-header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+        
+        // Handle smooth transitions for navigation anchors
+        document.querySelectorAll('.nav-link').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const targetId = this.getAttribute('href');
+                if (targetId.startsWith('#')) {
+                    e.preventDefault();
+                    const targetEl = document.getElementById(targetId.substring(1));
+                    if (targetEl) {
+                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                        this.classList.add('active');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
