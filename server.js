@@ -1024,7 +1024,7 @@ function saveDB(data) {
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 4));
 }
 
-// Multer Storage config
+// Multer Storage config with 100MB limit
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadsDir);
@@ -1035,7 +1035,17 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
+});
+
+function handleUploadError(err, req, res, next) {
+    if (err instanceof multer.MulterError) {
+        return res.status(400).json({ error: `Upload error: ${err.message}` });
+    }
+    next(err);
+}
 
 // Middleware
 app.use(express.json());
@@ -1087,7 +1097,7 @@ app.post('/api/gallery', upload.single('mediaFile'), (req, res) => {
 
     db.gallery.unshift(newPost);
     saveDB(db);
-    res.json({ success: true, post: newPost });
+    res.json({ success: true, post: newPost});
 });
 
 // Upload video path for hero

@@ -2489,10 +2489,12 @@ window.uploadCMSGalleryPost = async function() {
                 fileInput.value = '';
                 capInput.value = '';
                 alert("Gallery post uploaded and published live!");
+            } else {
+                alert(`Upload failed: ${data.error || 'Unknown error'}`);
             }
         } catch (e) {
             console.error("Gallery upload error:", e);
-            alert("Error uploading gallery file to server.");
+            alert("Error uploading gallery file to server. Check console for details.");
         }
     } else {
         // Offline demo upload
