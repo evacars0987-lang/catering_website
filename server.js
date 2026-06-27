@@ -1,14 +1,21 @@
 const express = require('express');
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Cloudinary config - uses CLOUDINARY_URL env var if set
-cloudinary.config({ secure: true });
+// Cloudinary config (optional - uses CLOUDINARY_URL env var)
+let cloudinary;
+try {
+    if (process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)) {
+        cloudinary = require('cloudinary').v2;
+        cloudinary.config({ secure: true });
+    }
+} catch (e) {
+    console.log('Cloudinary not configured, using local storage');
+}
 
 // Ensure uploads directory exists (ephemeral fallback for local dev)
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -1084,8 +1091,8 @@ app.post('/api/gallery', upload.single('mediaFile'), async (req, res) => {
     let fileType = req.body.type || 'image';
 
     if (req.file) {
-        // Check if Cloudinary is configured
-        const hasCloudinary = process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+        // Check if Cloudinary is configured and available
+        const hasCloudinary = cloudinary && (process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET));
         
         if (hasCloudinary) {
             try {
@@ -1099,6 +1106,7 @@ app.post('/api/gallery', upload.single('mediaFile'), async (req, res) => {
                 fs.unlinkSync(req.file.path);
             } catch (e) {
                 console.error('Cloudinary upload error:', e);
+                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
                 return res.status(500).json({ error: 'Cloudinary upload failed' });
             }
         } else {
@@ -1128,7 +1136,7 @@ app.post('/api/gallery', upload.single('mediaFile'), async (req, res) => {
 app.post('/api/cms/video', upload.single('videoFile'), async (req, res) => {
     const db = getDB();
     if (req.file) {
-        const hasCloudinary = process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+        const hasCloudinary = cloudinary && (process.env.CLOUDINARY_URL || (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET));
         
         if (hasCloudinary) {
             try {
@@ -1140,7 +1148,7 @@ app.post('/api/cms/video', upload.single('videoFile'), async (req, res) => {
                 fs.unlinkSync(req.file.path);
             } catch (e) {
                 console.error('Cloudinary upload error:', e);
-                fs.unlinkSync(req.file.path);
+                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
                 return res.status(500).json({ error: 'Cloudinary upload failed' });
             }
         } else {
